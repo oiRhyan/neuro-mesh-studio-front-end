@@ -1,0 +1,12 @@
+/* O container recebe a sombra, que se molda ao formato exato do elemento filho */
+.merged-shape-wrapper {
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+}
+
+.merged-shape-bg {
+  background: rgba(15, 15, 20, 0.75);
+  backdrop-filter: blur(20px);
+  
+  /* Usa o mesmo caminho do SVG para cortar o fundo, preservando as curvas */
+  clip-path: path("M 35 10 L 670 10 Q 680 10 680 20 L 680 430 Q 680 440 670 440 L 35 440 Q 10 440 10 415 L 10 35 Q 10 10 35 10 Z");
+}

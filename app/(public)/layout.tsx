@@ -15,11 +15,11 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
+    <main
       lang="pt-br"
       className={cn("h-full", "antialiased", "font-sans", poppins.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
+      {children}
+    </main>
   );
 }
