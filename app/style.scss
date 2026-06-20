@@ -39,8 +39,8 @@
     display: flex;
     flex-direction: column;
     font-family: var(--font-poppins);
-    gap: 1em;
-    margin-top: 100px;
+    gap: 0.6em;
+    margin-top: 50px;
     justify-content: start;
     align-items: center;
     color: white;
@@ -48,13 +48,13 @@
     height: 100vh;
 
     h1 {
-        font-size: 40px;
+        font-size: 30px;
         font-weight: bold;
         letter-spacing: 2px;
     }
 
     h2 {
-        font-size: 20px;
+        font-size: 15px;
         width: 40%;
         text-align: center;
         font-weight: 400;
@@ -81,7 +81,7 @@
 
 .input-text-size {
     font-family: var(--font-poppins);
-    font-size: 20px
+    font-size: 15px
 }
 
 .content-rectangle {
@@ -126,7 +126,7 @@
     max-height: 100vh;
     width: 100%;
     padding: 1.5rem;
-    gap: 500px;
+    gap: 220px;
     margin: 0;
 }
 
@@ -144,15 +144,15 @@
 
     h1 {
         font-weight: 900;
-        font-size: 50px;
-        width: 495px;
+        font-size: 34px;
+        width: 380px;
         margin-bottom: 10px;
     }
 
     h2 {
         font-weight: 200;
-        width: 495px;
-        font-size: 20px;
+        width: 380px;
+        font-size: 15px;
         margin-bottom: 25px;
     }
 
@@ -168,13 +168,13 @@
     position: absolute;
     align-items: center;
     justify-content: center;
-    margin-left: 34em;
+    margin-left: 27em;
     margin-top: 19px;
     flex-direction: row;
     z-index: 1;
 
     .hero-model-image {
-        width: 100%;
+        width: 640px;
         height: auto;
         object-fit: contain;
         mix-blend-mode: screen;
@@ -184,9 +184,9 @@
 
 .button {
     display: flex;
-    height: 60px;
-    width: 200px;
-    font-size: large;
+    height: 48px;
+    width: 160px;
+    font-size: 15px;
     border-radius: 200px;
     background-color: white;
     color: black;
@@ -195,12 +195,12 @@
 .discovery {
     display: flex;
     flex-direction: row;
-    font-size: 20px;
+    font-size: 14px;
     color: white;
     align-items: center;
     justify-content: center;
-    margin-top: 50px;
-    gap: 30px;
+    margin-top: 40px;
+    gap: 20px;
 }
 
 .test {
@@ -215,20 +215,20 @@
     justify-content: center;
     align-items: flex-start;
     margin-top: 60px;
-    margin-left: 20em;
+    margin-left: 28em;
     margin-bottom: 20px;
-    width: 150px;
+    width: 250px;
     flex: 1;
     z-index: 20;
 
     h2 {
         font-weight: bold;
-        margin-top: 45px;
-        font-size: 25px;
+        margin-top: 34px;
+        font-size: 19px;
     }
 
     h4 {
         font-weight: 500;
-        font-size: 15px;
+        font-size: 13px;
     }
 }

@@ -25,26 +25,86 @@ import Image from 'next/image';
 import Models from '../../../public/image/pikachu_remake.png';
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
-import { JSX, useState } from 'react';
-import { IconType } from 'react-icons/lib';
+import { useState } from 'react';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { useRouter } from 'next/navigation';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { useMutation } from '@tanstack/react-query';
+import { RegisterUserForm } from '@/types/User.type';
+import RegisterUser from '@/app/services/UserService';
+import { toast } from 'sonner';
+import { LoginRequestForm } from '@/types/Authorization.type';
+import { useAuthorization } from '@/hooks/useAuthorizationUser';
 
 export default function Login() {
 
    const router: AppRouterInstance = useRouter();
    const [seePassword, setSeePassword] = useState<boolean>(false);
-   const [imageProfile, setImageProfile] = useState<string>("/image/select-perfil.png");
+   const [imageProfile, setImageProfile] = useState<string | null>(null);
    const [isRegisterForm, setRegisterForm] = useState<boolean>(false);
+   const [form, setForm] = useState<RegisterUserForm>({
+      Name: "",
+      Email: "",
+      Password: "",
+      Biography: "",
+      ImageProfile: null as unknown as File,
+      ImageBanner: null as unknown as File,
+   });
+
+   const [loginForm, setLoginForm] = useState<LoginRequestForm>({
+      email: "",
+      password: ""
+   });
+
+   const { login  } = useAuthorization(router);
+
    const Icon = seePassword ? FaRegEyeSlash : FaRegEye
 
-   const handleImageChange = (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-         setImageProfile(URL.createObjectURL(file));
-      }
+   const handleImageChange = (
+      event: React.ChangeEvent<HTMLInputElement>
+   ) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      setImageProfile(URL.createObjectURL(file));
+      setForm((prev) => ({
+         ...prev,
+         ImageProfile: file,
+      }));
+   };
+
+   const handleRegisterForm = (
+      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+   ) => {
+      const { name, value } = event.target;
+      setForm((prev) => ({
+         ...prev,
+         [name]: value,
+      }));
+   };
+
+   const handleLoginForm = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = event.target;
+      setLoginForm((prev) => ({
+         ...prev,
+         [name]: value,
+      }));
    }
+
+   const registerUser = useMutation({
+      mutationFn: async (body: RegisterUserForm) => {
+         const req = await RegisterUser(body);
+         return req.Id;
+      },
+      onSuccess: () => {
+         toast.success("Sucesso ao cadastrar conta!");
+         setRegisterForm(false);
+      },
+      onError: (error: Error) => {
+         toast.error("Erro ao criar conta", {
+            description: error.message
+         });
+      }
+   });
 
    return (
       <main className='main-login'>
@@ -57,11 +117,10 @@ export default function Login() {
                      <h2 className='mb-2'> Registre seu perfil agora mesmo! Após isso você poderar realizar login</h2>
                      <div className='flex flex-row items-center justify-center'>
                         <label htmlFor="profile-upload" className="cursor-pointer">
-                           <Avatar className="size-35 m-0 left-20">
+                           <Avatar className="size-35 m-0 left-18">
                               <AvatarImage
-                                 src={imageProfile}
-                                 alt="profile-image"
-                                 className="grayscale"
+                                 src={imageProfile ?? "/image/select-perfil.png"}
+                                 alt="profile-image" 
                               />
                            </Avatar>
                         </label>
@@ -72,12 +131,15 @@ export default function Login() {
                            className="hidden"
                            onChange={handleImageChange}
                         />
-                        <div className='flex flex-col justify-center items-center gap-2.5 w-160'>
+                        <div className='flex flex-col justify-center items-center gap-3 w-130'>
                            <Field className='content-fields'>
                               <FieldLabel htmlFor="input-field-username" className='input-text-size'> E-mail </FieldLabel>
                               <Input
                                  id="input-field-username"
                                  type="text"
+                                 name='Email'
+                                 value={form.Email}
+                                 onChange={handleRegisterForm}
                                  className='input-validation'
                                  placeholder=""
                               />
@@ -88,6 +150,9 @@ export default function Login() {
                                  <InputGroupInput
                                     id="inline-end-input"
                                     type={seePassword ? "text" : "password"}
+                                    name='Password'
+                                    onChange={handleRegisterForm}
+                                    value={form.Password}
                                     placeholder=""
                                  />
                                  <InputGroupAddon align="inline-end">
@@ -107,6 +172,9 @@ export default function Login() {
                         <Input
                            id="input-field-username"
                            type="text"
+                           name='Name'
+                           value={form.Name}
+                           onChange={handleRegisterForm}
                            className='input-validation'
                            placeholder=""
                         />
@@ -116,24 +184,17 @@ export default function Login() {
                         <Input
                            id="input-field-username"
                            type="text"
+                           name='Biography'
+                           value={form.Biography}
+                           onChange={handleRegisterForm}
                            className='input-validation'
                            placeholder=""
                         />
                      </Field>
-                     <FieldGroup className="mx-auto w-145 mb-2">
-                        <Field orientation="horizontal">
-                           <Checkbox
-                              id="terms-checkbox-invalid"
-                              name="terms-checkbox-invalid"
-                              className='h-6 w-6'
-                           />
-                           <FieldLabel htmlFor="terms-checkbox-invalid" className='text-1xl'>
-                              Lembre de mim
-                           </FieldLabel>
-                        </Field>
-                     </FieldGroup>
-                     <Button variant={"default"} type={'button'} title='Login' className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white'>
-                        Cadastrar
+                     <Button variant={"default"} disabled={registerUser.isPending} type={'button'} onClick={() => registerUser.mutate(form)} title='Register' className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white'>
+                        {registerUser.isPending
+                           ? "Cadastrando..."
+                           : "Cadastrar"}
                      </Button>
                      <div className='w-[20%]'>
                         <div className="flex items-center justify-center gap-5">
@@ -163,6 +224,8 @@ export default function Login() {
                         <Input
                            id="input-field-username"
                            type="text"
+                           name='email'
+                           onChange={handleLoginForm}
                            className='input-validation'
                            placeholder=""
                         />
@@ -172,6 +235,8 @@ export default function Login() {
                         <InputGroup className='input-validation'>
                            <InputGroupInput
                               id="inline-end-input"
+                              name='password'
+                              onChange={handleLoginForm}
                               type={seePassword ? "text" : "password"}
                               placeholder=""
                            />
@@ -185,7 +250,7 @@ export default function Login() {
                            </InputGroupAddon>
                         </InputGroup>
                      </Field>
-                     <FieldGroup className="mx-auto w-145">
+                     <FieldGroup className="mx-auto w-115 mt-5 mb-5">
                         <Field orientation="horizontal">
                            <Checkbox
                               id="terms-checkbox-invalid"
@@ -201,14 +266,14 @@ export default function Login() {
                         variant={"default"}
                         type={'button'}
                         title='Login'
-                        className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white'
-                        onClick={() => {
-                           router.push('/home');
+                        className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white mb-4'
+                        onClick={async () => {
+                           await login(loginForm);
                         }}
                      >
                         Login
                      </Button>
-                     <div className='w-[20%]'>
+                     <div className='w-[20%] mb-4'>
                         <div className="flex items-center justify-center gap-5">
                            <Separator className='w-5xl' />
                            <span className="text-sm text-muted-foreground">
@@ -217,9 +282,6 @@ export default function Login() {
                            <Separator className='w-5xl' />
                         </div>
                      </div>
-                     <button>
-                        <Image src={Google} alt='login' height={65} />
-                     </button>
                      <FieldSet>
                         <FieldDescription>
                            Ainda não possuí uma conta?{"   "}

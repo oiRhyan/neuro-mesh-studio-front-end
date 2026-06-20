@@ -43,7 +43,7 @@ export function Navbar(): JSX.Element {
                         href={route.route}
                         className="text-white"
                     >
-                        <Icon size={45} />
+                        <Icon size={35} />
                     </Link>
                 })
             }

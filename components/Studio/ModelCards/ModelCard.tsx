@@ -1,13 +1,15 @@
 import BorderGlow from "./Glow/BorderGlow";
 
 type Props = {
-  imageUrl: string;
-  title: string;
+  title: string,
+  thumbnail: string,
+  onClick?: () => void;
 };
 
 export function ModelCard({
-  imageUrl,
   title,
+  thumbnail,
+  onClick
 }: Props) {
   return (
     <BorderGlow
@@ -20,14 +22,13 @@ export function ModelCard({
       coneSpread={32}
       animated={false}
       colors={["#c084fc", "#f472b6", "#38bdf8"]}
+      className="overflow-hidden"
     >
-      <div className="w-[115px] h-[120px] overflow-hidden rounded-[20px] bg-[#120F17] flex flex-col">
-        
-        {/* Thumbnail */}
-        <div className="h-[130px] w-full bg-zinc-900">
-          {imageUrl ? (
+      <div className="w-[90px] h-[110px] overflow-hidden rounded-[20px] bg-[#120F17] flex flex-col" onClick={onClick}>
+        <div className="h-[80px] w-[110px] bg-zinc-900 overflow-hidden">
+          {thumbnail ? (
             <img
-              src={imageUrl}
+              src={thumbnail}
               alt={title}
               className="w-full h-full object-cover"
             />
@@ -39,9 +40,7 @@ export function ModelCard({
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex-1 px-3 py-2 border-t border-white/10 flex items-center">
+        <div className="flex-1 px-3 py-2 border-t border-white/10 flex items-center overflow-hidden">
           <span className="text-sm text-white truncate">
             {title}
           </span>

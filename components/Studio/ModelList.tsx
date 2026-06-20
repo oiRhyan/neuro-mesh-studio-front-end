@@ -1,3 +1,5 @@
+'use client'
+
 import './studio.scss'
 import { FaSearch } from "react-icons/fa"
 import {
@@ -5,18 +7,29 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group"
-
 import { ModelCard } from "./ModelCards/ModelCard"
+import { useState } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import Cookies from 'js-cookie'
+import { getListModels } from '@/app/services/ModelService'
+import { SavedModels } from '@/types/ModelRequest'
 
-const mock = Array.from({ length: 8 }).map((_, index) => ({
-  title: `Modelo ${index + 1}`,
-  imageUrl: ''
-}))
+export type ModelListProps = {
+  onSelectModel: (url: string) => void;
+}
 
-export function ModelList() {
+export function ModelList({ onSelectModel }: ModelListProps) {
+  const userCookie = Cookies.get("user");
+  const user = userCookie ? JSON.parse(userCookie) : {};
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['userModels', user?.id],
+    queryFn: () => getListModels(user.id),
+    enabled: !!user?.id,
+  });
+
   return (
     <aside className="floating-models">
-
       <div className="floating-models-header">
         <h3>Meus Modelos</h3>
       </div>
@@ -35,13 +48,16 @@ export function ModelList() {
       </div>
 
       <div className="floating-models-grid">
-        {mock.map((model, index) => (
-          <ModelCard
-            key={index}
-            title={model.title}
-            imageUrl={model.imageUrl}
-          />
-        ))}
+        {
+          data?.models.map(m => (
+            <ModelCard
+              key={m.id}
+              title={m.title}
+              thumbnail={m.thumbnail}
+              onClick={() => onSelectModel(m.model)}
+            />
+          ))
+        }
       </div>
 
     </aside>
