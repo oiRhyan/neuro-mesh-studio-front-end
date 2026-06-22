@@ -35,28 +35,40 @@ import RegisterUser from '@/app/services/UserService';
 import { toast } from 'sonner';
 import { LoginRequestForm } from '@/types/Authorization.type';
 import { useAuthorization } from '@/hooks/useAuthorizationUser';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '@/types/schemas/login.schema';
+import z from 'zod';
+import { registerUserSchema, RegisterUserSchema } from '@/types/schemas/register.schema';
+
+type LoginUserRequestForm = z.infer<typeof loginSchema>
 
 export default function Login() {
-
    const router: AppRouterInstance = useRouter();
    const [seePassword, setSeePassword] = useState<boolean>(false);
    const [imageProfile, setImageProfile] = useState<string | null>(null);
    const [isRegisterForm, setRegisterForm] = useState<boolean>(false);
-   const [form, setForm] = useState<RegisterUserForm>({
-      Name: "",
-      Email: "",
-      Password: "",
-      Biography: "",
-      ImageProfile: null as unknown as File,
-      ImageBanner: null as unknown as File,
+   const registerFrom = useForm<RegisterUserSchema>({
+      resolver: zodResolver(registerUserSchema),
+      defaultValues: {
+         name: '',
+         email: '',
+         password: '',
+         imageProfile: null,
+         biography: ''
+      }
+   })
+   const loginForm = useForm<LoginUserRequestForm>({
+      resolver: zodResolver(loginSchema),
+      defaultValues: {
+         email: '',
+         password: ''
+      }
    });
 
-   const [loginForm, setLoginForm] = useState<LoginRequestForm>({
-      email: "",
-      password: ""
-   });
-
-   const { login  } = useAuthorization(router);
+   const { register, handleSubmit, formState: { errors } } = loginForm;
+   const { register: inputRegister, handleSubmit: handleRegister, formState: { errors: registerErrors }, watch, setValue } = registerFrom;
+   const { login, isLoading } = useAuthorization(router);
 
    const Icon = seePassword ? FaRegEyeSlash : FaRegEye
 
@@ -66,28 +78,32 @@ export default function Login() {
       const file = event.target.files?.[0];
       if (!file) return;
       setImageProfile(URL.createObjectURL(file));
-      setForm((prev) => ({
-         ...prev,
-         ImageProfile: file,
-      }));
+      setValue("imageProfile", file, {
+         shouldValidate: true
+      });
    };
 
-   const handleRegisterForm = (
-      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-   ) => {
-      const { name, value } = event.target;
-      setForm((prev) => ({
-         ...prev,
-         [name]: value,
-      }));
-   };
+   const onLoginSucess = async (data: LoginUserRequestForm) => {
+      console.log("[LoginForm] Dados validados, chamando API");
 
-   const handleLoginForm = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = event.target;
-      setLoginForm((prev) => ({
-         ...prev,
-         [name]: value,
-      }));
+      const formData: LoginRequestForm = {
+         email: data.email,
+         password: data.password
+      }
+
+      try {
+         const response = await login(formData)
+
+         if (response) {
+            console.log("[LoginForm] Usuário logado");
+         }
+      } catch (e) {
+         console.log(e);
+      }
+   }
+
+   const onLoginError = (formErrors: typeof errors) => {
+      console.log(`[LoginForm] Erro no formulário: ${formErrors}`);
    }
 
    const registerUser = useMutation({
@@ -106,6 +122,29 @@ export default function Login() {
       }
    });
 
+   const onRegisterSuccess = async (data: RegisterUserSchema) => {
+      console.log("[Register Form] Dados validados, chamando cadastro");
+
+      const registerData: RegisterUserForm = {
+         Name: data.name,
+         Email: data.email,
+         Password: data.password,
+         ImageProfile: data.imageProfile ?? null,
+         Biography: data.biography,
+         ImageBanner: null
+      }
+
+      try {
+         await registerUser.mutateAsync(registerData)
+      } catch (e) {
+         console.log(e);
+      }
+   }
+
+   const onRegisterError = async (formError: typeof registerErrors) => {
+      console.log(`[Register Form] Erro ao cadastrar formulário ${formError}`);
+   }
+
    return (
       <main className='main-login'>
          <div className='content-login'>
@@ -120,7 +159,7 @@ export default function Login() {
                            <Avatar className="size-35 m-0 left-18">
                               <AvatarImage
                                  src={imageProfile ?? "/image/select-perfil.png"}
-                                 alt="profile-image" 
+                                 alt="profile-image"
                               />
                            </Avatar>
                         </label>
@@ -130,29 +169,33 @@ export default function Login() {
                            accept="image/*"
                            className="hidden"
                            onChange={handleImageChange}
+                           aria-invalid={!!registerErrors.imageProfile}
                         />
                         <div className='flex flex-col justify-center items-center gap-3 w-130'>
-                           <Field className='content-fields'>
-                              <FieldLabel htmlFor="input-field-username" className='input-text-size'> E-mail </FieldLabel>
+                           <Field className='content-fields' data-invalid={!!registerErrors.email}>
+                              <FieldLabel htmlFor="input-field-register-email" className='input-text-size'> E-mail </FieldLabel>
                               <Input
-                                 id="input-field-username"
+                                 id="input-field-register-email"
                                  type="text"
-                                 name='Email'
-                                 value={form.Email}
-                                 onChange={handleRegisterForm}
+                                 {...inputRegister('email')}
                                  className='input-validation'
+                                 aria-invalid={!!registerErrors.email}
                                  placeholder=""
                               />
+                              {registerErrors.email && (
+                                 <FieldDescription>
+                                    {registerErrors.email.message}
+                                 </FieldDescription>
+                              )}
                            </Field>
-                           <Field className='content-fields'>
-                              <FieldLabel htmlFor="inline-end-input" className='input-text-size'>Senha</FieldLabel>
+                           <Field className='content-fields' data-invalid={!!registerErrors.password}>
+                              <FieldLabel htmlFor="input-field-register-password" className='input-text-size'>Senha</FieldLabel>
                               <InputGroup className='input-validation'>
                                  <InputGroupInput
-                                    id="inline-end-input"
+                                    id="input-field-register-password"
                                     type={seePassword ? "text" : "password"}
-                                    name='Password'
-                                    onChange={handleRegisterForm}
-                                    value={form.Password}
+                                    {...inputRegister("password")}
+                                    aria-invalid={!!registerErrors.password}
                                     placeholder=""
                                  />
                                  <InputGroupAddon align="inline-end">
@@ -164,34 +207,47 @@ export default function Login() {
                                     </button>
                                  </InputGroupAddon>
                               </InputGroup>
+                              {registerErrors.password && (
+                                 <FieldDescription>
+                                    {registerErrors.password.message}
+                                 </FieldDescription>
+                              )}
                            </Field>
                         </div>
                      </div>
-                     <Field className='content-fields'>
-                        <FieldLabel htmlFor="input-field-username" className='input-text-size'> Nome Completo </FieldLabel>
+                     <Field className='content-fields' data-invalid={!!registerErrors.name}>
+                        <FieldLabel htmlFor="input-field-register-username" className='input-text-size'> Nome Completo </FieldLabel>
                         <Input
-                           id="input-field-username"
+                           id="input-field-register-username"
                            type="text"
-                           name='Name'
-                           value={form.Name}
-                           onChange={handleRegisterForm}
+                           {...inputRegister('name')}
                            className='input-validation'
+                           aria-invalid={!!registerErrors.name}
                            placeholder=""
                         />
+                        {registerErrors.name && (
+                           <FieldDescription>
+                              {registerErrors.name.message}
+                           </FieldDescription>
+                        )}
                      </Field>
-                     <Field className='content-fields mb-2'>
-                        <FieldLabel htmlFor="input-field-username" className='input-text-size'> Biografia resumida </FieldLabel>
+                     <Field className='content-fields mb-2' data-invalid={!!registerErrors.biography}>
+                        <FieldLabel htmlFor="input-field-register-biography" className='input-text-size'> Biografia resumida </FieldLabel>
                         <Input
-                           id="input-field-username"
+                           id="input-field-register-biography"
                            type="text"
-                           name='Biography'
-                           value={form.Biography}
-                           onChange={handleRegisterForm}
+                           {...inputRegister('biography')}
                            className='input-validation'
                            placeholder=""
+                           aria-invalid={!!registerErrors.biography}
                         />
+                        {registerErrors.biography && (
+                           <FieldDescription>
+                              {registerErrors.biography.message}
+                           </FieldDescription>
+                        )}
                      </Field>
-                     <Button variant={"default"} disabled={registerUser.isPending} type={'button'} onClick={() => registerUser.mutate(form)} title='Register' className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white'>
+                     <Button variant={"default"} disabled={registerUser.isPending} type={'button'} onClick={handleRegister(onRegisterSuccess, onRegisterError)} title='Register' className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white'>
                         {registerUser.isPending
                            ? "Cadastrando..."
                            : "Cadastrar"}
@@ -219,25 +275,30 @@ export default function Login() {
                      <h1> ENTRE COM SUA CONTA </h1>
                      <h2> Bem-vindo de volta! Faça login em
                         sua conta para acessar o Studio</h2>
-                     <Field className='content-fields'>
-                        <FieldLabel htmlFor="input-field-username" className='input-text-size'> E-mail</FieldLabel>
+                     <Field className='content-fields' data-invalid={!!errors.email}>
+                        <FieldLabel htmlFor="input-field-user-email-login" className='input-text-size'> E-mail</FieldLabel>
                         <Input
-                           id="input-field-username"
+                           id="input-field-user-email-login"
                            type="text"
-                           name='email'
-                           onChange={handleLoginForm}
+                           {...register('email')}
                            className='input-validation'
+                           aria-invalid={!!errors.email}
                            placeholder=""
                         />
+                        {errors.email && (
+                           <FieldDescription>
+                              {errors.email.message}
+                           </FieldDescription>
+                        )}
                      </Field>
-                     <Field className='content-fields'>
+                     <Field className='content-fields' data-invalid={!!errors.password}>
                         <FieldLabel htmlFor="inline-end-input" className='input-text-size'>Senha</FieldLabel>
                         <InputGroup className='input-validation'>
                            <InputGroupInput
                               id="inline-end-input"
-                              name='password'
-                              onChange={handleLoginForm}
+                              {...register('password')}
                               type={seePassword ? "text" : "password"}
+                              aria-invalid={!!errors.password}
                               placeholder=""
                            />
                            <InputGroupAddon align="inline-end">
@@ -249,6 +310,12 @@ export default function Login() {
                               </button>
                            </InputGroupAddon>
                         </InputGroup>
+                        {errors.password && (
+                           <FieldDescription>
+                              {errors.password.message}
+                           </FieldDescription>
+                        )
+                        }
                      </Field>
                      <FieldGroup className="mx-auto w-115 mt-5 mb-5">
                         <Field orientation="horizontal">
@@ -266,10 +333,9 @@ export default function Login() {
                         variant={"default"}
                         type={'button'}
                         title='Login'
+                        disabled={isLoading}
                         className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white mb-4'
-                        onClick={async () => {
-                           await login(loginForm);
-                        }}
+                        onClick={handleSubmit(onLoginSucess, onLoginError)}
                      >
                         Login
                      </Button>

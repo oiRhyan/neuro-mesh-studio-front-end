@@ -14,8 +14,8 @@ export interface RegisterUserForm {
     Name: string,
     Email: string,
     Password: string,
-    ImageProfile: File,
-    ImageBanner: File,
+    ImageProfile: File | null,
+    ImageBanner: File | null,
     Biography: string
 }
 

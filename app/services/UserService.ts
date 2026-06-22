@@ -10,8 +10,8 @@ export default async function RegisterUser(
     formData.append("Name", payload.Name);
     formData.append("Email", payload.Email);
     formData.append("Password", payload.Password);
-    formData.append("ImageProfile", payload.ImageProfile);
-    formData.append("ImageBanner", payload.ImageBanner);
+    formData.append("ImageProfile", payload.ImageProfile ?? '');
+    formData.append("ImageBanner", payload.ImageBanner ?? '');
     formData.append("Biography", payload.Biography);
 
     const response = await tripoApi.post<RegisterUserResult>("User", formData);
