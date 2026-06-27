@@ -1,9 +1,155 @@
+'use client'
 
+import { useState, useRef, useEffect } from 'react'
+import { Avatar, AvatarImage } from '@/components/ui/avatar'
+import { Pencil, User, FileText } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { FieldLabel } from '@/components/ui/field'
+import { Button } from '@/components/ui/button'
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon
+} from '@/components/ui/input-group'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import Cookies from 'js-cookie'
+import './style.scss'
+import { useQuery } from '@tanstack/react-query'
+import { getListModels } from '@/app/services/ModelService'
+
+const editProfileSchema = z.object({
+  name: z.string().min(2, 'O nome é obrigatório.'),
+  bio: z.string().max(160, 'Máximo de 160 caracteres.'),
+})
+
+type EditProfileFormData = z.infer<typeof editProfileSchema>
 
 export default function About() {
-   return (
-      <div>
-         <h1 className="text-white"> About </h1>
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false); // Para resolver erro de hidratação
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  
+  const [user, setUser] = useState({ userName: 'Usuário', imageProfile: '', biography: '', id: '' });
+
+  useEffect(() => {
+    setIsMounted(true);
+    const userCookie = Cookies.get("user");
+    if (userCookie) setUser(JSON.parse(userCookie));
+  }, []);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['userModels', user.id],
+    queryFn: () => getListModels(user.id),
+    enabled: !!user.id,
+  });
+
+  // CORREÇÃO: Acessamos explicitamente a propriedade da lista de modelos
+  // Ajuste 'data.models' caso o nome da propriedade na sua API seja diferente
+  const models = Array.isArray(data) ? data : (data?.models ?? []);
+
+  const fileInputAvatar = useRef<HTMLInputElement>(null);
+  const fileInputBanner = useRef<HTMLInputElement>(null);
+
+  const { register, handleSubmit } = useForm<EditProfileFormData>({
+    resolver: zodResolver(editProfileSchema),
+    values: { // Usamos 'values' para atualizar o form quando o user carregar
+      name: user.userName || 'Usuário',
+      bio: user.biography || 'Full-Stack Developer & AI Integrator',
+    }
+  });
+
+  if (!isMounted) return null; // Espera o componente montar para renderizar (evita erro de hidratação)
+
+  return (
+    <div className="flex flex-col xl:flex-row gap-8 w-full max-w-7xl mx-auto p-5 mt-5 xl:h-[650px]" style={{ fontFamily: 'var(--font-poppins)' }}>
+      <div className="custom-glass-card flex-1 relative flex flex-col">
+
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <button className="edit-profile-btn absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-white text-sm font-medium transition-all">
+              <Pencil size={16} /> <span>Editar</span>
+            </button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-[500px] bg-[#121212] text-white border-zinc-800">
+            <DialogHeader>
+              <DialogTitle>Editar Perfil</DialogTitle>
+            </DialogHeader>
+
+            <div className="py-4 space-y-6">
+              <div className="relative h-28 bg-zinc-900 rounded-lg overflow-hidden group cursor-pointer" onClick={() => fileInputBanner.current?.click()}>
+                {bannerPreview ? <img src={bannerPreview} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-zinc-600">Alterar Banner</div>}
+                <input type="file" ref={fileInputBanner} className="hidden" accept="image/*" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if(file) setBannerPreview(URL.createObjectURL(file));
+                }} />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex gap-4 items-end">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden bg-zinc-900 border-2 border-zinc-800 cursor-pointer" onClick={() => fileInputAvatar.current?.click()}>
+                    <img src={avatarPreview || user.imageProfile} className="w-full h-full object-cover" />
+                    <input type="file" ref={fileInputAvatar} className="hidden" accept="image/*" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if(file) setAvatarPreview(URL.createObjectURL(file));
+                    }} />
+                  </div>
+                  <div className="flex-1">
+                    <FieldLabel className="text-xs text-zinc-400">Nome</FieldLabel>
+                    <InputGroup className="mt-1">
+                      <InputGroupAddon><User size={16} /></InputGroupAddon>
+                      <InputGroupInput {...register('name')} />
+                    </InputGroup>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Button onClick={handleSubmit((d) => { console.log(d); setIsOpen(false) })} className="w-full bg-white text-black">Salvar</Button>
+          </DialogContent>
+        </Dialog>
+
+        <div className="user-infos-banner relative z-10 shrink-0" />
+
+        <div className="px-8 pb-8 relative z-20 flex flex-col flex-1 min-h-0">
+          <div className="flex items-end gap-4 -mt-12 mb-8">
+            <Avatar className="w-24 h-24 border-4 border-[#121212] rounded-full bg-background">
+              <AvatarImage src={avatarPreview || user.imageProfile} />
+            </Avatar>
+            <div className="mb-1">
+              <h1 className="text-2xl font-bold text-white">{user.userName}</h1>
+              <p className="text-zinc-400 text-sm">{user.biography}</p>
+            </div>
+          </div>
+
+          <div className="user-models-section flex flex-col flex-1 min-h-0">
+            <h2 className="text-lg font-semibold text-white mb-4">Modelos criados</h2>
+            <div className="custom-scrollbar grid grid-cols-3 gap-4 overflow-y-auto flex-1">
+              {isLoading ? <p className="text-zinc-500">Carregando...</p> : 
+                models.map((item: any) => (
+                  <div key={item.id} className="model-card">
+                    <img src={item.thumbnail} className="h-32 w-full object-cover rounded-lg mb-2 bg-zinc-800" />
+                    <p className="text-sm text-zinc-300 truncate">{item.title}</p>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
       </div>
-   )
+      <div className="custom-glass-card flex-1 p-8">
+        <h2 className="text-3xl font-extrabold text-white">Sobre o Neuro Mesh Studio</h2>
+      </div>
+    </div>
+  )
 }

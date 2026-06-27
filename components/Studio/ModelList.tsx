@@ -13,6 +13,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import Cookies from 'js-cookie'
 import { getListModels } from '@/app/services/ModelService'
 import { SavedModels } from '@/types/ModelRequest'
+import { TbCube3dSphere } from "react-icons/tb";
 
 export type ModelListProps = {
   onSelectModel: (url: string) => void;
@@ -47,6 +48,12 @@ export function ModelList({ onSelectModel }: ModelListProps) {
         </InputGroup>
       </div>
 
+      {data == null && (
+          <div className="flex mt-20 flex-col items-center justify-center gap-2 text-center">
+            <TbCube3dSphere color="white" size={70} />
+            <h1>Seus modelos salvos irão aparecer aqui</h1>
+          </div>
+      )}
       <div className="floating-models-grid">
         {
           data?.models.map(m => (

@@ -59,10 +59,10 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
     handleSubmit,
     setValue,
     watch,
-    reset, // Adicionado para limpar o formulário após salvar
+    reset,
     formState: { errors }
   } = form;
-  
+
   const isPublic = watch('public');
 
   const onSubmit = async (data: SaveModelFormData) => {
@@ -85,7 +85,7 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
     try {
       const response = await saveModel(request);
       console.log("Payload enviado e modelo salvo com sucesso:", response);
-      
+
       toast.success("Modelo salvo com sucesso!");
       queryClient.invalidateQueries({
         queryKey: ['userModels', userObject.id]
@@ -120,7 +120,6 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
         <Sun size={20} />
       </button>
 
-      {/* 8. ⚙️ Vincula o estado controlado ao Dialog do Shadcn */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <button>
@@ -128,10 +127,10 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
           </button>
         </DialogTrigger>
         <DialogContent className="modal-save-model">
-          <DialogHeader>
-            <DialogTitle>Salvar meu Modelo</DialogTitle>
-            <DialogDescription>Configure os dados do modelo</DialogDescription>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Salvar meu Modelo</DialogTitle>
+          <DialogDescription>Configure os dados do modelo</DialogDescription>
+        </DialogHeader>
 
           <div className="modal-body">
             <div className="modal-form">

@@ -9,7 +9,8 @@ export interface LoginRequestResponse {
     user: {
         id: string,
         userName: string,
-        imageProfile: string
+        imageProfile: string,
+        biography: string,
     },
     error?: string
 }
