@@ -10,6 +10,7 @@ export interface LoginRequestResponse {
         id: string,
         userName: string,
         imageProfile: string,
+        banner: string,
         biography: string,
     },
     error?: string

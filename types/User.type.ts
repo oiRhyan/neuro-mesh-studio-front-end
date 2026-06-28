@@ -23,3 +23,29 @@ export interface RegisterUserResult {
     Id: string,
     DateTime: Date
 }
+
+export interface UpdateUserFormRequest {
+    Name?: string,
+    Biography?: string,
+    ImageProfile?: File,
+    ImageBanner?: File
+}
+
+export interface GetUserByIdResponse {
+    id: string,
+    email: string
+    userProfile: {
+        userName: string,
+        profileImage: string,
+        bannerImage: string,
+        biography: string
+    }
+}
+
+export interface UpdateUserFormResponse {
+    UserId: string,
+    Name: string,
+    BannerImage: string,
+    ProfileImage: string,
+    Biography: string
+}

@@ -15,7 +15,7 @@ import { Switch } from '@/components/ui/switch'
 import { InputGroup, InputGroupInput, InputGroupTextarea } from '@/components/ui/input-group'
 import { Button } from '@/components/ui/button'
 import '../studio.scss'
-import { useRef, useState } from 'react' // 1. Adicionado o useState aqui
+import { useRef, useState } from 'react'
 import { SaveModelRequest } from '@/types/ModelRequest'
 import Cookies from 'js-cookie'
 import { ThumbnailViewer } from './ThumbnailViewer'
@@ -24,8 +24,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { saveModelSchema } from '../../../types/schemas/save-model.schema'
 import { z } from 'zod'
 import { saveModel } from './../../../app/services/ModelService';
-import { useQueryClient } from '@tanstack/react-query' // 2. Importado o hook do React Query
-import { toast } from 'sonner' // Opcional: para feedback visual
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 type SaveModelFormData = z.infer<typeof saveModelSchema>
 
@@ -39,6 +39,7 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
   const userObject = userRequest ? JSON.parse(userRequest) : {};
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); // Estado para controlar o loading do download
 
   const form = useForm<SaveModelFormData>({
     resolver: zodResolver(saveModelSchema),
@@ -109,6 +110,35 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
   const onError = (formErrors: typeof errors) => {
     console.warn("Formulário inválido. Verifique os campos abaixo:", formErrors)
   }
+
+  const handleDownloadModel = async () => {
+    if (!modelUrl) {
+      toast.error("URL do modelo não encontrada.");
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const response = await fetch(modelUrl);
+      const blob = await response.blob();
+      const localUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = localUrl;
+      const filename = modelUrl.split('/').pop()?.split('?')[0] || 'modelo-3d.glb';
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(localUrl);
+
+      toast.success("Download iniciado!");
+    } catch (error) {
+      console.error("Erro ao fazer o download do modelo:", error);
+      toast.error("Falha ao baixar o arquivo do modelo.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="viewer-toolbar">
@@ -199,8 +229,13 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
           </div>
         </DialogContent>
       </Dialog>
-      <button>
-        <Download size={20} />
+      
+      <button 
+        onClick={handleDownloadModel} 
+        disabled={isDownloading}
+        className={isDownloading ? "opacity-50 cursor-not-allowed" : ""}
+      >
+        <Download size={20} className={isDownloading ? "animate-bounce" : ""} />
       </button>
     </div>
   )

@@ -31,7 +31,6 @@ import { useRouter } from 'next/navigation';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useMutation } from '@tanstack/react-query';
 import { RegisterUserForm } from '@/types/User.type';
-import RegisterUser from '@/app/services/UserService';
 import { toast } from 'sonner';
 import { LoginRequestForm } from '@/types/Authorization.type';
 import { useAuthorization } from '@/hooks/useAuthorizationUser';
@@ -40,6 +39,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/types/schemas/login.schema';
 import z from 'zod';
 import { registerUserSchema, RegisterUserSchema } from '@/types/schemas/register.schema';
+import { RegisterUser } from '@/app/services/UserService';
 
 type LoginUserRequestForm = z.infer<typeof loginSchema>
 

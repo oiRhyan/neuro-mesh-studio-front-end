@@ -2,11 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import { Pencil, User, FileText } from 'lucide-react'
+import { Pencil, User } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -21,26 +20,30 @@ import {
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { toast } from 'sonner'
 import Cookies from 'js-cookie'
 import './style.scss'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { getListModels } from '@/app/services/ModelService'
+import Image from 'next/image'
+import { UpdateUserFormRequest } from '@/types/User.type'
+import { UpdateUser, getUserById } from '@/app/services/UserService' // Certifique-om de que o getUserById está importado aqui
 
 const editProfileSchema = z.object({
   name: z.string().min(2, 'O nome é obrigatório.'),
   bio: z.string().max(160, 'Máximo de 160 caracteres.'),
+  banner: z.any().optional(),
+  imageProfile: z.any().optional()
 })
 
 type EditProfileFormData = z.infer<typeof editProfileSchema>
 
 export default function About() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false); // Para resolver erro de hidratação
+  const [isMounted, setIsMounted] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  
-  const [user, setUser] = useState({ userName: 'Usuário', imageProfile: '', biography: '', id: '' });
+
+  const [user, setUser] = useState({ userName: '', imageProfile: '', banner: '', biography: '', id: '' });
 
   useEffect(() => {
     setIsMounted(true);
@@ -54,22 +57,71 @@ export default function About() {
     enabled: !!user.id,
   });
 
-  // CORREÇÃO: Acessamos explicitamente a propriedade da lista de modelos
-  // Ajuste 'data.models' caso o nome da propriedade na sua API seja diferente
   const models = Array.isArray(data) ? data : (data?.models ?? []);
 
   const fileInputAvatar = useRef<HTMLInputElement>(null);
   const fileInputBanner = useRef<HTMLInputElement>(null);
 
-  const { register, handleSubmit } = useForm<EditProfileFormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<EditProfileFormData>({
     resolver: zodResolver(editProfileSchema),
-    values: { // Usamos 'values' para atualizar o form quando o user carregar
-      name: user.userName || 'Usuário',
-      bio: user.biography || 'Full-Stack Developer & AI Integrator',
+    values: {
+      name: user.userName || '',
+      bio: user.biography || '',
+      banner: '',
+      imageProfile: ''
     }
   });
 
-  if (!isMounted) return null; // Espera o componente montar para renderizar (evita erro de hidratação)
+  const onUpdateUser = async (data: EditProfileFormData) => {
+    const request: UpdateUserFormRequest = {
+      Name: data.name,
+      Biography: data.bio,
+      ImageBanner: data.banner,
+      ImageProfile: data.imageProfile
+    }
+
+    try {
+      const response = await UpdateUser(user.id, request);
+      return response;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  }
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: EditProfileFormData) => {
+      await onUpdateUser(data);
+      const freshUser = await getUserById(user.id);
+      return freshUser;
+    },
+    onSuccess: (freshUser) => {
+      if (freshUser) {
+        const formattedUser = {
+          id: freshUser.id,
+          userName: freshUser.userProfile.userName,
+          biography: freshUser.userProfile.biography,
+          banner: freshUser.userProfile.bannerImage,
+          imageProfile: freshUser.userProfile.profileImage 
+        };
+
+        Cookies.set("user", JSON.stringify(formattedUser), {
+          sameSite: "strict",
+          expires: 7
+        });
+      }
+
+      setIsOpen(false);
+      setAvatarPreview(null);
+      setBannerPreview(null);
+      window.location.reload();
+    },
+    onError: (e) => {
+      console.warn("Erro ao sincronizar perfil:", e);
+    }
+  })
+
+  if (!isMounted) return null;
 
   return (
     <div className="flex flex-col xl:flex-row gap-8 w-full max-w-7xl mx-auto p-5 mt-5 xl:h-[650px]" style={{ fontFamily: 'var(--font-poppins)' }}>
@@ -89,20 +141,38 @@ export default function About() {
 
             <div className="py-4 space-y-6">
               <div className="relative h-28 bg-zinc-900 rounded-lg overflow-hidden group cursor-pointer" onClick={() => fileInputBanner.current?.click()}>
-                {bannerPreview ? <img src={bannerPreview} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-zinc-600">Alterar Banner</div>}
+                {(bannerPreview || user.banner) ? (
+                  <img src={bannerPreview || user.banner} className="w-full h-full object-cover" alt="Banner Preview" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-zinc-600">Alterar Banner</div>
+                )}
                 <input type="file" ref={fileInputBanner} className="hidden" accept="image/*" onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if(file) setBannerPreview(URL.createObjectURL(file));
+                  if (file) {
+                    setBannerPreview(URL.createObjectURL(file));
+
+                    setValue('banner', file, {
+                      shouldValidate: true,
+                      shouldDirty: true
+                    });
+                  }
                 }} />
               </div>
 
               <div className="space-y-4">
                 <div className="flex gap-4 items-end">
                   <div className="relative w-20 h-20 rounded-full overflow-hidden bg-zinc-900 border-2 border-zinc-800 cursor-pointer" onClick={() => fileInputAvatar.current?.click()}>
-                    <img src={avatarPreview || user.imageProfile} className="w-full h-full object-cover" />
+                    <img src={avatarPreview || user.imageProfile} className="w-full h-full object-cover" alt="Avatar Preview" />
                     <input type="file" ref={fileInputAvatar} className="hidden" accept="image/*" onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if(file) setAvatarPreview(URL.createObjectURL(file));
+                      if (file) {
+                        setAvatarPreview(URL.createObjectURL(file));
+
+                        setValue('imageProfile', file, {
+                          shouldValidate: true,
+                          shouldDirty: true
+                        });
+                      }
                     }} />
                   </div>
                   <div className="flex-1">
@@ -111,15 +181,35 @@ export default function About() {
                       <InputGroupAddon><User size={16} /></InputGroupAddon>
                       <InputGroupInput {...register('name')} />
                     </InputGroup>
+                    {errors.name && <span className="text-red-500 text-xs mt-1 block">{errors.name.message}</span>}
                   </div>
+                </div>
+                <div className="flex flex-col">
+                  <FieldLabel className="text-xs text-zinc-400">Biografia</FieldLabel>
+                  <textarea
+                    {...register('bio')}
+                    className="mt-1 w-full h-24 bg-transparent border border-zinc-800 rounded-md p-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-600 resize-none transition-all"
+                    placeholder="Escreva algo sobre você..."
+                  />
+                  {errors.bio && <span className="text-red-500 text-xs mt-1 block">{errors.bio.message}</span>}
                 </div>
               </div>
             </div>
-            <Button onClick={handleSubmit((d) => { console.log(d); setIsOpen(false) })} className="w-full bg-white text-black">Salvar</Button>
+            <Button
+              onClick={handleSubmit((data) => updateProfileMutation.mutate(data))}
+              className="w-full bg-white text-black hover:bg-zinc-200"
+              disabled={updateProfileMutation.isPending}
+            >
+              {updateProfileMutation.isPending ? 'Salvando...' : 'Salvar'}
+            </Button>
           </DialogContent>
         </Dialog>
 
-        <div className="user-infos-banner relative z-10 shrink-0" />
+        <div className="user-infos-banner relative z-10 shrink-0 min-h-[160px] bg-zinc-900 rounded-t-xl overflow-hidden">
+          {user.banner && (
+            <Image src={user.banner} alt='banner' fill priority className="object-cover" />
+          )}
+        </div>
 
         <div className="px-8 pb-8 relative z-20 flex flex-col flex-1 min-h-0">
           <div className="flex items-end gap-4 -mt-12 mb-8">
@@ -135,10 +225,10 @@ export default function About() {
           <div className="user-models-section flex flex-col flex-1 min-h-0">
             <h2 className="text-lg font-semibold text-white mb-4">Modelos criados</h2>
             <div className="custom-scrollbar grid grid-cols-3 gap-4 overflow-y-auto flex-1">
-              {isLoading ? <p className="text-zinc-500">Carregando...</p> : 
+              {isLoading ? <p className="text-zinc-500">Carregando...</p> :
                 models.map((item: any) => (
                   <div key={item.id} className="model-card">
-                    <img src={item.thumbnail} className="h-32 w-full object-cover rounded-lg mb-2 bg-zinc-800" />
+                    <img src={item.thumbnail} className="h-32 w-full object-cover rounded-lg mb-2 bg-zinc-800" alt={item.title} />
                     <p className="text-sm text-zinc-300 truncate">{item.title}</p>
                   </div>
                 ))
