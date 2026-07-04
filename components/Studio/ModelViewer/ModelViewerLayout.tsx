@@ -7,6 +7,7 @@ import { LoadingModel } from './LoadingModel/LoadingModel'
 import { ModelToolbar } from './ModelToolbar'
 import { ViewerCanvas } from './ViewerCanvas'
 import { ViewerTopbar } from './ViewTopBar'
+import { useState } from 'react'
 
 interface ModelViewerLayoutProps {
   modelUrl?: string
@@ -25,6 +26,9 @@ export function ModelViewerLayout({
   progress,
   onSelectModel
 }: ModelViewerLayoutProps) {
+  
+  const [modelId, setModelId] = useState<string>('');
+
   return (
     <section className="viewer-layout">
       <div className="viewer-container">
@@ -33,7 +37,7 @@ export function ModelViewerLayout({
         <ViewerCanvas modelUrl={modelUrl} />
 
         <div className="left-panel">
-          <ModelList onSelectModel={onSelectModel} />
+          <ModelList onSelectModel={onSelectModel} onSelectModelId={setModelId} />
           <GenerationPanel onGenerate={onGenerate} loading={loading} />
         </div>
 
@@ -41,7 +45,7 @@ export function ModelViewerLayout({
 
         <EnvironmentPanel />
 
-        <ModelToolbar modelUrl={modelUrl ?? ""} modelThumbnail={modelThumbnail ?? ""} />
+        <ModelToolbar modelUrl={modelUrl ?? ""} modelThumbnail={modelThumbnail ?? ""} modelId={modelId} />
       </div>
     </section>
   )

@@ -1,5 +1,5 @@
 import { tripoApi } from "../core/api";
-import { CreateModelRequest, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
+import { CreateModelRequest, DeleteModel, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
 
 function base64ToBlob(base64Data: string, contentType = 'image/png') {
     const byteCharacters = atob(base64Data.split(',')[1]);
@@ -37,7 +37,7 @@ export async function saveModel(payload: SaveModelRequest) {
     form.append('UserID', payload.userId);
     form.append('Title', payload.title);
     form.append('Description', payload.description);
-    form.append('Public', String(payload.public)); // 👍 Corrigido o erro de TypeScript conversion para string
+    form.append('Public', String(payload.public));
     form.append('Model', payload.model);
 
     if (typeof payload.thumbnail === 'string') {
@@ -60,10 +60,19 @@ export async function saveModel(payload: SaveModelRequest) {
     return response.data;
 }
 
-
 export async function getListModels(
     userId: string
 ) {
     const response = await tripoApi.get<{ models: Array<SavedModels> }>(`Tripo/models?UserId=${userId}`);
+    return response.data;
+}
+
+export async function deleteModel(
+    modelId: string
+) {
+    const body: DeleteModel = {
+        modelId: modelId
+    }
+    const response = await tripoApi.delete('Tripo', { data: body });
     return response.data;
 }

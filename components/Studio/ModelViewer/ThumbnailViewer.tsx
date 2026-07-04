@@ -62,7 +62,7 @@ export function ThumbnailViewer({ modelUrl, onCaptureReady }: ThumbnailViewerPro
     <div className="thumbnail-viewer" style={{ width: '100%', height: '250px', position: 'relative' }}>
       <Canvas
         gl={{
-          preserveDrawingBuffer: true // Necessário para permitir o .toDataURL() assíncrono
+          preserveDrawingBuffer: true
         }}
         camera={{
           position: [4, 3, 6],
@@ -71,7 +71,6 @@ export function ThumbnailViewer({ modelUrl, onCaptureReady }: ThumbnailViewerPro
       >
         <ThumbnailCapture onCaptureReady={onCaptureReady} />
 
-        <BackgroundGradient />
         <ambientLight intensity={1.5} />
         <directionalLight intensity={3} position={[5, 8, 5]} />
         

@@ -22,3 +22,7 @@ export type SavedModels = {
     createdAt: Date
     model: string
 }
+
+export type DeleteModel = {
+   modelId: string
+}

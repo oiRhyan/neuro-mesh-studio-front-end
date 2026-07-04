@@ -8,18 +8,17 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 import { ModelCard } from "./ModelCards/ModelCard"
-import { useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import Cookies from 'js-cookie'
 import { getListModels } from '@/app/services/ModelService'
-import { SavedModels } from '@/types/ModelRequest'
 import { TbCube3dSphere } from "react-icons/tb";
 
 export type ModelListProps = {
   onSelectModel: (url: string) => void;
+  onSelectModelId: (modelId: string) => void;
 }
 
-export function ModelList({ onSelectModel }: ModelListProps) {
+export function ModelList({ onSelectModel, onSelectModelId }: ModelListProps) {
   const userCookie = Cookies.get("user");
   const user = userCookie ? JSON.parse(userCookie) : {};
 
@@ -41,7 +40,6 @@ export function ModelList({ onSelectModel }: ModelListProps) {
             type="search"
             placeholder="Pesquisar..."
           />
-
           <InputGroupAddon align="inline-end">
             <FaSearch color="white" />
           </InputGroupAddon>
@@ -61,12 +59,14 @@ export function ModelList({ onSelectModel }: ModelListProps) {
               key={m.id}
               title={m.title}
               thumbnail={m.thumbnail}
-              onClick={() => onSelectModel(m.model)}
+              onClick={() => {
+                onSelectModel(m.model)
+                onSelectModelId(m.id)
+              }}
             />
           ))
         }
       </div>
-
     </aside>
   )
 }

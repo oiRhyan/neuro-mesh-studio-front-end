@@ -16,30 +16,33 @@ import { InputGroup, InputGroupInput, InputGroupTextarea } from '@/components/ui
 import { Button } from '@/components/ui/button'
 import '../studio.scss'
 import { useRef, useState } from 'react'
-import { SaveModelRequest } from '@/types/ModelRequest'
+import { DeleteModel, SaveModelRequest } from '@/types/ModelRequest'
 import Cookies from 'js-cookie'
 import { ThumbnailViewer } from './ThumbnailViewer'
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { saveModelSchema } from '../../../types/schemas/save-model.schema'
 import { z } from 'zod'
-import { saveModel } from './../../../app/services/ModelService';
-import { useQueryClient } from '@tanstack/react-query'
+import { deleteModel, saveModel } from './../../../app/services/ModelService';
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { HiTrash } from "react-icons/hi2";
 
 type SaveModelFormData = z.infer<typeof saveModelSchema>
 
 type ModelToolBarProps = {
   modelUrl: string
   modelThumbnail: string
+  modelId: string
 }
 
-export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
+export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
   const userRequest = Cookies.get("user");
   const userObject = userRequest ? JSON.parse(userRequest) : {};
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false); // Estado para controlar o loading do download
+  const [isDeleteOpen, setDeleteIsOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const form = useForm<SaveModelFormData>({
     resolver: zodResolver(saveModelSchema),
@@ -66,32 +69,32 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
 
   const isPublic = watch('public');
 
-  const onSubmit = async (data: SaveModelFormData) => {
-    console.log('Formulário válido! Chamou onSubmit.');
-    let thumbnail: string | File = ''
+  const saveModelMutation = useMutation({
+    mutationFn: async (data: SaveModelFormData) => {
+      let thumbnail: string | File = ''
 
-    if (captureRef.current) {
-      thumbnail = captureRef.current()
-    }
+      if (captureRef.current) {
+        thumbnail = captureRef.current()
+      }
 
-    const request: SaveModelRequest = {
-      userId: data.userId,
-      title: data.title,
-      description: data.description,
-      public: data.public,
-      model: modelUrl,
-      thumbnail: thumbnail,
-    }
+      const request: SaveModelRequest = {
+        userId: data.userId,
+        title: data.title,
+        description: data.description,
+        public: data.public,
+        model: modelUrl,
+        thumbnail: thumbnail,
+      }
 
-    try {
       const response = await saveModel(request);
-      console.log("Payload enviado e modelo salvo com sucesso:", response);
-
+      return response;
+    },
+    onSuccess: () => {
+      setIsOpen(false);
       toast.success("Modelo salvo com sucesso!");
       queryClient.invalidateQueries({
         queryKey: ['userModels', userObject.id]
       });
-      setIsOpen(false);
       reset({
         userId: userObject.id,
         title: '',
@@ -100,7 +103,34 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
         public: false,
         model: modelUrl,
       });
+    },
+    onError: () => {
+      setIsOpen(false);
+    }
+  });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (modelId: string) => {
+      const response = await deleteModel(modelId);
+      return response;
+    },
+    onSuccess: () => {
+      setDeleteIsOpen(false);
+      toast.success("Modelo excluido com sucesso!");
+      queryClient.invalidateQueries({
+        queryKey: ['userModels', userObject.id]
+      });
+    },
+    onError: () => {
+      setDeleteIsOpen(false);
+      toast.error("Este modelo não está salvo na sua lista de modelos atual");
+    }
+  })
+
+  const onSubmit = async (data: SaveModelFormData) => {
+    console.log('Formulário válido! Chamou onSubmit.');
+    try {
+      await saveModelMutation.mutateAsync(data);
     } catch (error) {
       console.error("Erro ao salvar o modelo:", error);
       toast.error("Erro ao salvar o modelo.");
@@ -146,9 +176,27 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
         <RotateCcw size={20} />
       </button>
 
-      <button>
-        <Sun size={20} />
-      </button>
+      <Dialog open={isDeleteOpen} onOpenChange={setDeleteIsOpen}>
+        <DialogTrigger asChild>
+          <button>
+            <HiTrash size={20} />
+          </button>
+        </DialogTrigger>
+        <DialogContent className='modal-delete-model'>
+          <DialogHeader>
+            <DialogTitle>Deseja excluir o modelo?</DialogTitle>
+            <DialogDescription className='fontfamily'>Ao confirmar seu modelo será excluido da sua lista permanentemente</DialogDescription>
+          </DialogHeader>
+          <div className='w-full flex gap-5 justify-end'>
+             <Button className='fontfamily' onClick={() => deleteMutation.mutateAsync(modelId)}>
+                Excluir
+             </Button>
+             <Button className='fontfamily text-black' variant={'outline'} onClick={() => setDeleteIsOpen(false)}>
+                Cancelar
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
@@ -157,14 +205,14 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
           </button>
         </DialogTrigger>
         <DialogContent className="modal-save-model">
-        <DialogHeader>
-          <DialogTitle>Salvar meu Modelo</DialogTitle>
-          <DialogDescription>Configure os dados do modelo</DialogDescription>
-        </DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Salvar meu Modelo</DialogTitle>
+            <DialogDescription>Configure os dados do modelo</DialogDescription>
+          </DialogHeader>
 
           <div className="modal-body">
             <div className="modal-form">
-              <FieldGroup className="max-w-sm">
+              <FieldGroup className="fontfamily max-w-sm">
                 <Field>
                   <FieldLabel htmlFor="title">Título</FieldLabel>
                   <InputGroup className="h-auto">
@@ -199,7 +247,7 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
 
               <div className="public-switch">
                 <div>
-                  <FieldLabel htmlFor="public-model">Modelo público</FieldLabel>
+                  <FieldLabel htmlFor="public-model" className='fontfamily'>Modelo público</FieldLabel>
                   <p>Permitir que outros criadores visualizem este modelo.</p>
                 </div>
                 <Switch
@@ -210,7 +258,11 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
                 />
               </div>
 
-              <Button onClick={handleSubmit(onSubmit, onError)}>Salvar</Button>
+              <Button
+                onClick={handleSubmit(onSubmit, onError)}
+                className='fontfamily'
+                disabled={saveModelMutation.isPending}
+              > Salvar</Button>
             </div>
 
             <div className="modal-viewer">
@@ -229,9 +281,9 @@ export function ModelToolbar({ modelUrl }: ModelToolBarProps) {
           </div>
         </DialogContent>
       </Dialog>
-      
-      <button 
-        onClick={handleDownloadModel} 
+
+      <button
+        onClick={handleDownloadModel}
         disabled={isDownloading}
         className={isDownloading ? "opacity-50 cursor-not-allowed" : ""}
       >

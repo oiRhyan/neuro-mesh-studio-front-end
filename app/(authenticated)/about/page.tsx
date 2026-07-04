@@ -26,7 +26,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { getListModels } from '@/app/services/ModelService'
 import Image from 'next/image'
 import { UpdateUserFormRequest } from '@/types/User.type'
-import { UpdateUser, getUserById } from '@/app/services/UserService' // Certifique-om de que o getUserById está importado aqui
+import { UpdateUser, getUserById } from '@/app/services/UserService'
 
 const editProfileSchema = z.object({
   name: z.string().min(2, 'O nome é obrigatório.'),
@@ -124,9 +124,8 @@ export default function About() {
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col xl:flex-row gap-8 w-full max-w-7xl mx-auto p-5 mt-5 xl:h-[650px]" style={{ fontFamily: 'var(--font-poppins)' }}>
+    <div className="fontfamily flex flex-col xl:flex-row gap-8 w-full max-w-7xl mx-auto p-5 mt-5 xl:h-[650px]">
       <div className="custom-glass-card flex-1 relative flex flex-col">
-
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <button className="edit-profile-btn absolute top-4 right-4 z-20 flex items-center gap-2 px-3 py-2 rounded-xl text-white text-sm font-medium transition-all">
@@ -134,12 +133,12 @@ export default function About() {
             </button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-[500px] bg-[#121212] text-white border-zinc-800">
+          <DialogContent className="fontfamily sm:max-w-[500px] bg-[#121212] text-white border-zinc-800">
             <DialogHeader>
               <DialogTitle>Editar Perfil</DialogTitle>
             </DialogHeader>
 
-            <div className="py-4 space-y-6">
+            <div className="fontfamily py-4 space-y-6">
               <div className="relative h-28 bg-zinc-900 rounded-lg overflow-hidden group cursor-pointer" onClick={() => fileInputBanner.current?.click()}>
                 {(bannerPreview || user.banner) ? (
                   <img src={bannerPreview || user.banner} className="w-full h-full object-cover" alt="Banner Preview" />
@@ -197,7 +196,7 @@ export default function About() {
             </div>
             <Button
               onClick={handleSubmit((data) => updateProfileMutation.mutate(data))}
-              className="w-full bg-white text-black hover:bg-zinc-200"
+              className="fontfamily w-full bg-white text-black hover:bg-zinc-200"
               disabled={updateProfileMutation.isPending}
             >
               {updateProfileMutation.isPending ? 'Salvando...' : 'Salvar'}
@@ -237,9 +236,35 @@ export default function About() {
           </div>
         </div>
       </div>
-      <div className="custom-glass-card flex-1 p-8">
-        <h2 className="text-3xl font-extrabold text-white">Sobre o Neuro Mesh Studio</h2>
+
+      {/* About Card Modificado */}
+      <div className="custom-glass-card flex-1 p-8 relative overflow-hidden flex flex-col justify-center">
+        {/* Imagem de Fundo (Marca d'água / Transparente) */}
+        <div 
+          className="absolute inset-0 z-0 opacity-15 pointer-events-none"
+          style={{
+            backgroundImage: 'url("/image/aboutBackground.png")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+
+        {/* Conteúdo de Texto */}
+        <div className="relative z-10 flex flex-col gap-4 text-zinc-300">
+          <h2 className="text-3xl font-extrabold text-white mb-2">Sobre o NeuroMeshStudio</h2>
+          <p className="font-medium text-white">
+            Obrigado por utilizar o NeuroMeshStudio!
+          </p>
+          <p className="text-sm leading-relaxed">
+            O NeuroMeshStudio foi desenvolvido para tornar a criação, edição e gerenciamento de modelos 3D mais simples e acessíveis. Utilizando inteligência artificial, a plataforma permite transformar ideias em modelos tridimensionais, organizá-los em um único ambiente e acelerar o fluxo de trabalho de artistas, desenvolvedores e criadores.
+          </p>
+          <p className="text-sm leading-relaxed">
+            Nosso objetivo é oferecer uma experiência intuitiva, unindo tecnologias modernas de geração 3D, processamento de imagens e ferramentas de edição para facilitar o desenvolvimento de projetos criativos.
+          </p>
+        </div>
       </div>
+      
     </div>
   )
 }

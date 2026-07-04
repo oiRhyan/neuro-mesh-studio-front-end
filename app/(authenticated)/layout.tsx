@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useRouter } from 'next/navigation';
 import QueryProvider from "../providers/QuerClientProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const poppins = Poppins({
     style: 'normal',
@@ -115,6 +116,7 @@ export default function AutheticatedLayout({
                 >
                     <div className={cn("p-6", "h-full", poppins.variable)}>
                         {children}
+                        <Toaster />
                     </div>
                 </div>
             </main>
