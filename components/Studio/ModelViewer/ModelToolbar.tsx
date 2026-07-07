@@ -148,23 +148,51 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
     }
 
     setIsDownloading(true);
+
     try {
       const response = await fetch(modelUrl);
+
+      if (!response.ok) {
+        throw new Error("Modelo não encontrado.");
+      }
+
+      const contentType = response.headers.get("content-type") ?? "";
+
+      // Verifica se realmente é um GLB
+      if (
+        !contentType.includes("model/gltf-binary") &&
+        !contentType.includes("application/octet-stream")
+      ) {
+        throw new Error("Arquivo inválido.");
+      }
+
+      const filename =
+        modelUrl.split("/").pop()?.split("?")[0] || "modelo-3d.glb";
+
+      if (!filename.toLowerCase().endsWith(".glb")) {
+        throw new Error("Arquivo inválido.");
+      }
+
       const blob = await response.blob();
+
       const localUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+
+      const link = document.createElement("a");
       link.href = localUrl;
-      const filename = modelUrl.split('/').pop()?.split('?')[0] || 'modelo-3d.glb';
       link.download = filename;
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
       window.URL.revokeObjectURL(localUrl);
 
       toast.success("Download iniciado!");
     } catch (error) {
       console.error("Erro ao fazer o download do modelo:", error);
-      toast.error("Falha ao baixar o arquivo do modelo.");
+      toast.error(
+        "Não foi possível baixar o modelo. Salve-o primeiro em sua biblioteca."
+      );
     } finally {
       setIsDownloading(false);
     }
@@ -188,12 +216,12 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
             <DialogDescription className='fontfamily'>Ao confirmar seu modelo será excluido da sua lista permanentemente</DialogDescription>
           </DialogHeader>
           <div className='w-full flex gap-5 justify-end'>
-             <Button className='fontfamily' onClick={() => deleteMutation.mutateAsync(modelId)}>
-                Excluir
-             </Button>
-             <Button className='fontfamily text-black' variant={'outline'} onClick={() => setDeleteIsOpen(false)}>
-                Cancelar
-             </Button>
+            <Button className='fontfamily' onClick={() => deleteMutation.mutateAsync(modelId)}>
+              Excluir
+            </Button>
+            <Button className='fontfamily text-black' variant={'outline'} onClick={() => setDeleteIsOpen(false)}>
+              Cancelar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

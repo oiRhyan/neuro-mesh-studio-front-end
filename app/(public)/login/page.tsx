@@ -18,7 +18,6 @@ import {
 import {
    Separator
 } from '@/components/ui/separator'
-import Google from '../../../public/image/google-login.png'
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from "@/components/ui/input"
 import Image from 'next/image';

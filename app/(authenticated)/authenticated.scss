@@ -145,12 +145,16 @@
 }
 
 .modal {
-   background-color: #121212;
-   font-family: var(--font-poppins);
-   color: white;
+  background-color: #121212;
+  font-family: var(--font-poppins);
+  color: white;
 }
 
 .modal-buttons {
   background-color: #252424;
   color: #121212; 
+}
+
+.fontfamily {
+  font-family: var(--font-poppins); 
 }

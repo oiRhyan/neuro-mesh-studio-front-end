@@ -6,7 +6,6 @@ import { ModelViewerLayout } from "@/components/Studio/ModelViewer/ModelViewerLa
 import { useState, useEffect } from 'react';
 
 export default function Studio() {
-  
   const {
     generate,
     loading,
@@ -21,6 +20,13 @@ export default function Studio() {
       setActiveModelUrl(generatedModelUrl);
     }
   }, [generatedModelUrl]);
+
+  // NOVO: Salva no cache sempre que o activeModelUrl for atualizado
+  useEffect(() => {
+    if (activeModelUrl) {
+      localStorage.setItem('@neuro-mesh:last-model-url', activeModelUrl);
+    }
+  }, [activeModelUrl]);
 
   return (
     <main className="studio-page">

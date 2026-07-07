@@ -46,7 +46,7 @@ export function ModelList({ onSelectModel, onSelectModelId }: ModelListProps) {
         </InputGroup>
       </div>
 
-      {data == null && (
+      {data?.models.length == 0 && (
           <div className="flex mt-20 flex-col items-center justify-center gap-2 text-center">
             <TbCube3dSphere color="white" size={70} />
             <h1>Seus modelos salvos irão aparecer aqui</h1>
