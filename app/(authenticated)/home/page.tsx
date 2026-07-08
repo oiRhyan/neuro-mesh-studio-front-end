@@ -234,7 +234,7 @@ export default function Home() {
 
                <div className="bg-gradient-to-br from-indigo-900/10 to-[#121216]/80 backdrop-blur-md border border-white/10 rounded-3xl p-5 flex-[0.8] flex flex-col justify-between relative overflow-hidden group cursor-pointer">
                   <div className="flex justify-between items-center relative z-10">
-                     <span className="text-xl font-bold tracking-wider text-white">Status da <br></br> plataforma</span>
+                     <span className="fontfamily text-xl font-bold tracking-wider text-white">Status da <br></br> plataforma</span>
                   </div>
                   <p className="text-sm text-gray-300 relative z-10 mt-2">GPU Cluster Operacional</p>
                   <div className="absolute right-[-20px] bottom-[-20px] w-24 h-24 bg-green-500/20 rounded-full blur-xl" />
