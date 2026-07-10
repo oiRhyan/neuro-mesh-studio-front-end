@@ -95,6 +95,9 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
       queryClient.invalidateQueries({
         queryKey: ['userModels', userObject.id]
       });
+      queryClient.invalidateQueries({
+        queryKey:['public-models']
+      });
       reset({
         userId: userObject.id,
         title: '',

@@ -24,13 +24,11 @@ function Model({ url }: { url: string }) {
 
   return (
     <Center>
-      {/* IMPORTANTE: dispose={null} impede que o R3F destrua os materiais compartilhados ao fechar o modal */}
       <primitive object={clonedScene} dispose={null} />
     </Center>
   )
 }
 
-// Componente responsável por extrair a função de captura com segurança do contexto WebGL
 function ThumbnailCapture({
   onCaptureReady
 }: {
@@ -45,7 +43,7 @@ function ThumbnailCapture({
       })
     }
     return () => {
-      onCaptureReady(() => '') // Limpa a referência ao desmontar
+      onCaptureReady(() => '')
     }
   }, [gl, onCaptureReady])
 

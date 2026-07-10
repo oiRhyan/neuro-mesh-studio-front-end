@@ -26,3 +26,20 @@ export type SavedModels = {
 export type DeleteModel = {
    modelId: string
 }
+
+export type PublicModelRequest = {
+    publicModels: PublicModel[]
+}
+
+export type PublicModel = {
+    modelThumbnail: string,
+    modelTitle: string,
+    modelDescription: string,
+    pbrModel: string,
+    user: {
+        userName: string,
+        profileImage: string,
+        bannerImage: string,
+        biography: string
+    }
+}

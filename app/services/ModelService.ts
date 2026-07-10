@@ -1,5 +1,5 @@
 import { tripoApi } from "../core/api";
-import { CreateModelRequest, DeleteModel, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
+import { CreateModelRequest, DeleteModel, PublicModel, PublicModelRequest, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
 
 function base64ToBlob(base64Data: string, contentType = 'image/png') {
     const byteCharacters = atob(base64Data.split(',')[1]);
@@ -74,5 +74,10 @@ export async function deleteModel(
         modelId: modelId
     }
     const response = await tripoApi.delete('Tripo', { data: body });
+    return response.data;
+}
+
+export async function getPublicModels() {
+    const response = await tripoApi.get<PublicModelRequest>('Tripo/models/public');
     return response.data;
 }
