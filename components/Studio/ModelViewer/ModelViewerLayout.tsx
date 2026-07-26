@@ -29,23 +29,36 @@ export function ModelViewerLayout({
   
   const [modelId, setModelId] = useState<string>('');
 
+  const handleGenerate = (image: File) => {
+    setModelId(''); 
+    onGenerate(image);
+  };
+
+  const handleSelectModelFromList = (url: string, id: string) => {
+    setModelId(id);
+    onSelectModel(url);
+  };
+
   return (
     <section className="viewer-layout">
       <div className="viewer-container">
         <ViewerTopbar />
-
         <ViewerCanvas modelUrl={modelUrl} />
-
         <div className="left-panel">
-          <ModelList onSelectModel={onSelectModel} onSelectModelId={setModelId} />
-          <GenerationPanel onGenerate={onGenerate} loading={loading} />
+          <ModelList 
+            onSelectModel={(url) => onSelectModel(url)} 
+            onSelectModelId={(id) => setModelId(id)} 
+          />
+          <GenerationPanel onGenerate={handleGenerate} loading={loading} />
         </div>
-
         <LoadingModel progress={progress} loading={loading} />
-
         <EnvironmentPanel />
-
-        <ModelToolbar modelUrl={modelUrl ?? ""} modelThumbnail={modelThumbnail ?? ""} modelId={modelId} />
+        <ModelToolbar 
+          modelUrl={modelUrl ?? ""} 
+          modelThumbnail={modelThumbnail ?? ""} 
+          modelId={modelId} 
+          onModelSaved={(newId) => setModelId(newId)}
+        />
       </div>
     </section>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { RotateCcw, Sun, Download } from 'lucide-react'
+import { RotateCcw, Download } from 'lucide-react'
 import { RiSave3Fill } from "react-icons/ri"
 import {
   Dialog,
@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
@@ -16,7 +15,8 @@ import { InputGroup, InputGroupInput, InputGroupTextarea } from '@/components/ui
 import { Button } from '@/components/ui/button'
 import '../studio.scss'
 import { useRef, useState } from 'react'
-import { DeleteModel, SaveModelRequest } from '@/types/ModelRequest'
+import { SaveModelRequest } from '@/types/ModelRequest'
+import { Spinner } from '@/components/ui/spinner'
 import Cookies from 'js-cookie'
 import { ThumbnailViewer } from './ThumbnailViewer'
 import { useForm } from 'react-hook-form';
@@ -32,11 +32,12 @@ type SaveModelFormData = z.infer<typeof saveModelSchema>
 
 type ModelToolBarProps = {
   modelUrl: string
-  modelThumbnail: string
+  modelThumbnail?: string
   modelId: string
+  onModelSaved?: (newModelId: string) => void
 }
 
-export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
+export function ModelToolbar({ modelUrl, modelId, onModelSaved }: ModelToolBarProps) {
   const userRequest = Cookies.get("user");
   const userObject = userRequest ? JSON.parse(userRequest) : {};
   const queryClient = useQueryClient();
@@ -47,7 +48,7 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
   const form = useForm<SaveModelFormData>({
     resolver: zodResolver(saveModelSchema),
     defaultValues: {
-      userId: userObject.id,
+      userId: userObject?.id,
       title: '',
       thumbnail: '',
       description: '',
@@ -69,6 +70,19 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
 
   const isPublic = watch('public');
 
+  const checkIsModelAlreadySaved = () => {
+    return Boolean(modelId && modelId !== '' && modelId !== 'undefined' && modelId !== 'null');
+  };
+
+  const handleOpenSaveModal = () => {
+    if (checkIsModelAlreadySaved()) {
+      toast.info("O modelo já está salvo!");
+      return;
+    }
+
+    setIsOpen(true);
+  };
+
   const saveModelMutation = useMutation({
     mutationFn: async (data: SaveModelFormData) => {
       let thumbnail: string | File = ''
@@ -89,14 +103,19 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
       const response = await saveModel(request);
       return response;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setIsOpen(false);
       toast.success("Modelo salvo com sucesso!");
+
+      if (data?.id || data?._id) {
+        onModelSaved?.(data.id || data._id);
+      }
+
       queryClient.invalidateQueries({
         queryKey: ['userModels', userObject.id]
       });
       queryClient.invalidateQueries({
-        queryKey:['public-models']
+        queryKey: ['public-models']
       });
       reset({
         userId: userObject.id,
@@ -113,13 +132,14 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (modelId: string) => {
-      const response = await deleteModel(modelId);
+    mutationFn: async (idToDelete: string) => {
+      const response = await deleteModel(idToDelete);
       return response;
     },
     onSuccess: () => {
       setDeleteIsOpen(false);
-      toast.success("Modelo excluido com sucesso!");
+      toast.success("Modelo excluído com sucesso!");
+      onModelSaved?.('');
       queryClient.invalidateQueries({
         queryKey: ['userModels', userObject.id]
       });
@@ -131,7 +151,14 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
   })
 
   const onSubmit = async (data: SaveModelFormData) => {
-    console.log('Formulário válido! Chamou onSubmit.');
+    if (saveModelMutation.isPending) return;
+
+    if (checkIsModelAlreadySaved()) {
+      toast.info("O modelo já está salvo!");
+      setIsOpen(false);
+      return;
+    }
+
     try {
       await saveModelMutation.mutateAsync(data);
     } catch (error) {
@@ -161,7 +188,6 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
 
       const contentType = response.headers.get("content-type") ?? "";
 
-      // Verifica se realmente é um GLB
       if (
         !contentType.includes("model/gltf-binary") &&
         !contentType.includes("application/octet-stream")
@@ -177,7 +203,6 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
       }
 
       const blob = await response.blob();
-
       const localUrl = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -208,15 +233,15 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
       </button>
 
       <Dialog open={isDeleteOpen} onOpenChange={setDeleteIsOpen}>
-        <DialogTrigger asChild>
-          <button>
-            <HiTrash size={20} />
-          </button>
-        </DialogTrigger>
+        <button onClick={() => setDeleteIsOpen(true)}>
+          <HiTrash size={20} />
+        </button>
         <DialogContent className='modal-delete-model'>
           <DialogHeader>
             <DialogTitle>Deseja excluir o modelo?</DialogTitle>
-            <DialogDescription className='fontfamily'>Ao confirmar seu modelo será excluido da sua lista permanentemente</DialogDescription>
+            <DialogDescription className='fontfamily'>
+              Ao confirmar seu modelo será excluído da sua lista permanentemente
+            </DialogDescription>
           </DialogHeader>
           <div className='w-full flex gap-5 justify-end'>
             <Button className='fontfamily' onClick={() => deleteMutation.mutateAsync(modelId)}>
@@ -229,12 +254,11 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
         </DialogContent>
       </Dialog>
 
+      <button onClick={handleOpenSaveModal}>
+        <RiSave3Fill size={20} color="white" />
+      </button>
+
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <button>
-            <RiSave3Fill size={20} color="white" />
-          </button>
-        </DialogTrigger>
         <DialogContent className="modal-save-model">
           <DialogHeader>
             <DialogTitle>Salvar meu Modelo</DialogTitle>
@@ -290,10 +314,17 @@ export function ModelToolbar({ modelUrl, modelId }: ModelToolBarProps) {
               </div>
 
               <Button
+                type="button"
                 onClick={handleSubmit(onSubmit, onError)}
                 className='fontfamily'
                 disabled={saveModelMutation.isPending}
-              > Salvar</Button>
+              >
+                {saveModelMutation.isPending ? (
+                  <> <Spinner /> <h1> Salvar </h1> </>
+                ) : (
+                  <h1> Salvar </h1>
+                )}
+              </Button>
             </div>
 
             <div className="modal-viewer">

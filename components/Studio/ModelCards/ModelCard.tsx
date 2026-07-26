@@ -24,8 +24,8 @@ export function ModelCard({
       colors={["#c084fc", "#f472b6", "#38bdf8"]}
       className="overflow-hidden"
     >
-      <div className="w-[100px] h-[110px] overflow-hidden rounded-[20px] bg-[#120F17] flex flex-col" onClick={onClick}>
-        <div className="h-[80px] w-[110px] bg-zinc-900 overflow-hidden">
+      <div className="w-[100px] h-[100px] overflow-hidden rounded-[20px] bg-[#120F17] flex flex-col" onClick={onClick}>
+        <div className="h-[70px] w-[110px] bg-zinc-900 overflow-hidden">
           {thumbnail ? (
             <img
               src={thumbnail}

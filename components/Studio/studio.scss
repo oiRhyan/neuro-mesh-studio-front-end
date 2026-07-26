@@ -90,7 +90,7 @@
 .floating-models {
   width: 250px;
   height: 420px;
-  max-height: 800px;
+  max-height: 420px;
   font-family: var(--font-poppins);
   padding: 14px;
   border-radius: 20px;
@@ -124,7 +124,7 @@
 
 .floating-models-grid {
   display: grid;
-  height: 32c0px;
+  height: 320px;
   font-family: var(--font-poppins);
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
