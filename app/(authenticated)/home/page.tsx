@@ -28,6 +28,7 @@ export default function Home() {
    const [currentPage, setCurrentPage] = useState(1);
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [selectedModelData, setSelectedModelData] = useState<any>(null);
+   const [searchTerm, setSearchTerm] = useState<string>("");
 
    const { data } = useQuery({
       queryKey: ['public-models'],
@@ -41,6 +42,21 @@ export default function Home() {
       }
    }, []);
 
+   useEffect(() => {
+      if (searchTerm.trim() !== '') {
+         setCurrentTab("Modelos da Comunidade");
+      }
+      setCurrentPage(1);
+   }, [searchTerm]);
+
+   const filteredModels = (data?.publicModels ?? []).filter((m: any) => {
+      const query = searchTerm.toLowerCase().trim();
+      if (!query) return true;
+      const matchesTitle = m.modelTitle?.toLowerCase().includes(query);
+      const matchesAuthor = m.user?.userName?.toLowerCase().includes(query);
+      return matchesTitle || matchesAuthor;
+   });
+
    return (
       <div className="w-full h-full text-white p-4 md:p-8 font-sans selection:bg-purple-500/30 relative bottom-8">
          <header className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
@@ -52,7 +68,9 @@ export default function Home() {
                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                <input
                   type="text"
-                  placeholder="Buscar modelos..."
+                  placeholder="Buscar modelos por título ou autor..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-12 pr-4 text-sm focus:outline-none focus:border-purple-500/50 transition-colors"
                />
             </div>
@@ -276,71 +294,78 @@ export default function Home() {
                </>
             ) : (
                <div className="w-full lg:col-span-12 flex flex-col justify-between overflow-hidden">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-                     {(() => {
-                        const ITEMS_PER_PAGE = 8;
-                        const totalPages = Math.ceil((data?.publicModels?.length ?? 0) / ITEMS_PER_PAGE);
-                        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-                        const selectedItems = data?.publicModels?.slice(startIndex, startIndex + ITEMS_PER_PAGE) ?? [];
+                  {filteredModels.length === 0 ? (
+                     <div className="w-full py-20 flex flex-col items-center justify-center text-center bg-white/5 border border-white/10 rounded-3xl">
+                        <p className="fontfamily text-gray-300 text-lg font-medium">Nenhum modelo encontrado</p>
+                        <p className="fontfamily text-gray-500 text-sm mt-1">Tente pesquisar por outros termos ou verifique a ortografia.</p>
+                     </div>
+                  ) : (
+                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                        {(() => {
+                           const ITEMS_PER_PAGE = 8;
+                           const totalPages = Math.ceil(filteredModels.length / ITEMS_PER_PAGE);
+                           const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                           const selectedItems = filteredModels.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-                        return (
-                           <>
-                              {selectedItems.map((m: any, index: number) => (
-                                 <div 
-                                    key={index} 
-                                    onClick={() => {
-                                       setSelectedModelData(m);
-                                       setIsModalOpen(true);
-                                    }}
-                                    className="cursor-pointer transition-transform hover:scale-[1.01]"
-                                 >
-                                    <ModelPublicCard
-                                       title={m.modelTitle}
-                                       imageUrl={m.modelThumbnail}
-                                       avatarUrl={m.user.profileImage}
-                                       authorName={m.user.userName}
-                                    />
-                                 </div>
-                              ))}
-
-                              {totalPages > 1 && (
-                                 <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-end gap-2 text-xs font-medium text-gray-400 mt-4 pr-1 select-none">
-                                    <button
-                                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                       disabled={currentPage === 1}
-                                       className="fontfamily w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                           return (
+                              <>
+                                 {selectedItems.map((m: any, index: number) => (
+                                    <div 
+                                       key={m.id || index} 
+                                       onClick={() => {
+                                          setSelectedModelData(m);
+                                          setIsModalOpen(true);
+                                       }}
+                                       className="cursor-pointer transition-transform hover:scale-[1.01]"
                                     >
-                                       <ChevronLeft size={14} />
-                                    </button>
-
-                                    <div className="fontfamily flex items-center gap-1">
-                                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                          <button
-                                             key={page}
-                                             onClick={() => setCurrentPage(page)}
-                                             className={`w-8 h-8 flex items-center justify-center rounded-xl border text-[11px] transition-all cursor-pointer ${page === currentPage
-                                                ? 'bg-purple-500/10 border-purple-500/40 text-purple-400 font-semibold'
-                                                : 'bg-transparent border-transparent hover:bg-white/5 hover:text-white'
-                                             }`}
-                                          >
-                                             {page}
-                                          </button>
-                                       ))}
+                                       <ModelPublicCard
+                                          title={m.modelTitle}
+                                          imageUrl={m.modelThumbnail}
+                                          avatarUrl={m.user?.profileImage}
+                                          authorName={m.user?.userName}
+                                       />
                                     </div>
+                                 ))}
 
-                                    <button
-                                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                       disabled={currentPage === totalPages}
-                                       className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
-                                    >
-                                       <ChevronRight size={14} />
-                                    </button>
-                                 </div>
-                              )}
-                           </>
-                        );
-                     })()}
-                  </div>
+                                 {totalPages > 1 && (
+                                    <div className="col-span-2 md:col-span-3 lg:col-span-4 flex items-center justify-end gap-2 text-xs font-medium text-gray-400 mt-4 pr-1 select-none">
+                                       <button
+                                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                          disabled={currentPage === 1}
+                                          className="fontfamily w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                                       >
+                                          <ChevronLeft size={14} />
+                                       </button>
+
+                                       <div className="fontfamily flex items-center gap-1">
+                                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                             <button
+                                                key={page}
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-xl border text-[11px] transition-all cursor-pointer ${page === currentPage
+                                                   ? 'bg-purple-500/10 border-purple-500/40 text-purple-400 font-semibold'
+                                                   : 'bg-transparent border-transparent hover:bg-white/5 hover:text-white'
+                                                }`}
+                                             >
+                                                {page}
+                                             </button>
+                                          ))}
+                                       </div>
+
+                                       <button
+                                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                          disabled={currentPage === totalPages}
+                                          className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed"
+                                       >
+                                          <ChevronRight size={14} />
+                                       </button>
+                                    </div>
+                                 )}
+                              </>
+                           );
+                        })()}
+                     </div>
+                  )}
 
                   <ModelDetailsModal
                      isOpen={isModalOpen}
