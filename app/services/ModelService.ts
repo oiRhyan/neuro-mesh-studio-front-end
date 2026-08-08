@@ -1,5 +1,5 @@
 import { tripoApi } from "../core/api";
-import { CreateModelRequest, DeleteModel, PublicModel, PublicModelRequest, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
+import { CreateModelRequest, DeleteModel, PublicModel, PublicModelRequest, RiggCheckModelResponse, RiggExecutorResponse, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
 
 function base64ToBlob(base64Data: string, contentType = 'image/png') {
     const byteCharacters = atob(base64Data.split(',')[1]);
@@ -79,5 +79,25 @@ export async function deleteModel(
 
 export async function getPublicModels() {
     const response = await tripoApi.get<PublicModelRequest>('Tripo/models/public');
+    return response.data;
+}
+
+export async function checkRiggModel(
+    task_id: string
+) {
+   const response = await tripoApi.post<RiggCheckModelResponse>("Tripo/models/checking", {
+      modelUrl: task_id
+   });
+   return response.data;
+}
+
+export async function executeRiggModel(
+    task_id: string,
+    rig_type: string
+) {
+    const response = await tripoApi.post<RiggExecutorResponse>("Tripo/models/rig", {
+        task_id,
+        rig_type
+    });
     return response.data;
 }

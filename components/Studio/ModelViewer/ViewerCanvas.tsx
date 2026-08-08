@@ -1,22 +1,24 @@
 'use client'
 
 import { Canvas } from '@react-three/fiber'
-import { useMemo } from 'react'
+import { useMemo, useRef, useEffect } from 'react'
+import * as THREE from 'three'
+import { SkeletonUtils } from 'three-stdlib'
 import {
   OrbitControls,
   Environment,
   ContactShadows,
-  Center,
   Grid,
   GizmoHelper,
   GizmoViewport,
-  useGLTF
+  useGLTF,
+  useAnimations,
+  Center
 } from '@react-three/drei'
 
-function Model({ url }: { url: string }) {
+function Model({ url, isTaunting }: { url: string; isTaunting: boolean }) {
   if (!url) return null
   
-  // Verificação robusta: imune a URL encoding (%3F), parâmetros adicionais ou letras maiúsculas
   const lowerUrl = url.toLowerCase()
   const isModel = lowerUrl.includes('.glb') || lowerUrl.includes('.gltf') || lowerUrl.startsWith('blob:')
   
@@ -27,30 +29,127 @@ function Model({ url }: { url: string }) {
   
   const { scene } = useGLTF(url)
 
-  // Clona a cena para isolar o grafo de cena do estúdio principal
-  const clonedScene = useMemo(() => {
-    return scene.clone(true)
+  const { animations: tauntAnimations } = useGLTF('/taunt.glb');
+
+  const groupRef = useRef<THREE.Group>(null)
+
+  const formattedAnimations = useMemo(() => {
+    if (!tauntAnimations || tauntAnimations.length === 0) return []
+    const clip = tauntAnimations[0].clone()
+    clip.name = 'taunt'
+    return [clip]
+  }, [tauntAnimations])
+
+  const { actions } = useAnimations(formattedAnimations, groupRef)
+
+  useEffect(() => {
+    const tauntAction = actions['taunt']
+    if (!tauntAction) return
+
+    if (isTaunting) {
+      tauntAction.reset().fadeIn(0.3).play()
+    } else {
+      tauntAction.fadeOut(0.3)
+    }
+
+    return () => {
+      tauntAction.fadeOut(0.3)
+    }
+  }, [isTaunting, actions])
+
+  const { clonedScene, scaleFactor } = useMemo(() => {
+    const clone = SkeletonUtils.clone(scene)
+    const itemsToRemove: any[] = []
+
+    clone.traverse((child: any) => {
+      const name = child.name ? child.name.toLowerCase() : ''
+      
+      if (
+        name.includes('bounds') || 
+        name.includes('hitbox') || 
+        name.includes('collider') || 
+        name.includes('collision') ||
+        name.includes('sensor')
+      ) {
+        itemsToRemove.push(child)
+        return
+      }
+
+      if (child.isMesh || child.isSkinnedMesh) {
+        child.frustumCulled = false
+        child.castShadow = true
+        child.receiveShadow = true
+
+        if (child.material) {
+          if (child.material.opacity === 0 || child.material.transparent) {
+            child.material.depthWrite = false
+            child.renderOrder = -1
+          }
+        }
+      }
+    })
+
+    itemsToRemove.forEach((item) => {
+      if (item.parent) {
+        item.parent.remove(item)
+      }
+    })
+
+    clone.updateMatrixWorld(true)
+    const box = new THREE.Box3()
+    box.makeEmpty()
+
+    clone.traverse((child: any) => {
+      if ((child.isMesh || child.isSkinnedMesh) && child.geometry) {
+        child.geometry.computeBoundingBox()
+        if (child.geometry.boundingBox) {
+          const childBox = child.geometry.boundingBox.clone()
+          childBox.applyMatrix4(child.matrixWorld)
+          box.union(childBox)
+        }
+      }
+    })
+
+    let calculatedScale = 1
+    if (!box.isEmpty()) {
+      const size = new THREE.Vector3()
+      box.getSize(size)
+
+      const targetHeight = 2
+      const currentHeight = size.y > 0.001 ? size.y : 1 
+      calculatedScale = targetHeight / currentHeight
+    }
+
+    return { clonedScene: clone, scaleFactor: calculatedScale }
   }, [scene])
 
   return (
-    <Center>
-      <primitive
-        object={clonedScene}
-        dispose={null}
-      />
-    </Center>
+    <group ref={groupRef}>
+      <Center
+        bottom
+        position={[0, 3, 0]}
+      >
+        <group scale={scaleFactor}>
+          <primitive
+            object={clonedScene}
+            dispose={null}
+          />
+        </group>
+      </Center>
+    </group>
   )
 }
 
 type ViewerCanvasProps = {
   modelUrl?: string
+  isTaunting?: boolean
 }
 
-export function ViewerCanvas({ modelUrl }: ViewerCanvasProps) {
+export function ViewerCanvas({ modelUrl, isTaunting = false }: ViewerCanvasProps) {
   return (
     <Canvas
       camera={{
-        position: [4, 3, 6],
+        position: [0, 0.5, 4.5], 
         fov: 45
       }}
     >
@@ -73,26 +172,25 @@ export function ViewerCanvas({ modelUrl }: ViewerCanvasProps) {
         sectionColor="#323643"
       />
 
-      {modelUrl && (
-        <>
-          <Model url={modelUrl} />
-          <ContactShadows
-            position={[0, -1, 0]}
-            opacity={0.4}
-            scale={20}
-            blur={2}
-          />
-        </>
-      )}
+      {modelUrl && <Model url={modelUrl} isTaunting={isTaunting} />}
+
+      <ContactShadows
+        position={[0, -1, 0]}
+        opacity={0.4}
+        scale={20}
+        blur={2}
+      />
 
       <OrbitControls
         makeDefault
         enableDamping
+        dampingFactor={0.05}
+        target={[0, 0, 0]} 
       />
 
       <GizmoHelper
         alignment="bottom-right"
-        margin={[80, 80]}
+        margin={[70, 70]}
       >
         <GizmoViewport />
       </GizmoHelper>

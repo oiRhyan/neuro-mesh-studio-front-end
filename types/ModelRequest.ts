@@ -43,3 +43,12 @@ export type PublicModel = {
         biography: string
     }
 }
+
+export type RiggCheckModelResponse = {
+    task_id: string,
+    rig_type: string
+}
+
+export type RiggExecutorResponse = {
+    task_id: string
+}

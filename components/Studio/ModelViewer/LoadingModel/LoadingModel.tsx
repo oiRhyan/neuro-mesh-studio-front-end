@@ -1,14 +1,34 @@
 'use client'
+
 import { Progress } from "@/components/ui/progress"
+import { GenerationStep } from '@/hooks/useGenerateModel'
 import '../../studio.scss';
 
 type LoadingProps = {
-    progress: number,
-    loading: boolean
+    progress: number;
+    loading: boolean;
+    step: GenerationStep;
 }
 
-export function LoadingModel({ loading, progress }: LoadingProps) {
-    if (!loading) return null;
+export function LoadingModel({ loading, progress, step }: LoadingProps) {
+    if (!loading || step === 'idle') return null;
+
+    const stepDetails = {
+        generating: {
+            title: "Gerando Modelo Base",
+            subtitle: "Processando malha 3D da imagem..."
+        },
+        checking_rig: {
+            title: "Analisando Modelo",
+            subtitle: "Verificando compatibilidade e tipo de esqueleto..."
+        },
+        rigging: {
+            title: "Aplicando Rigging",
+            subtitle: "Estruturando articulações no modelo..."
+        }
+    };
+    
+    const currentInfo = stepDetails[step] || stepDetails.generating;
 
     return (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
@@ -16,11 +36,11 @@ export function LoadingModel({ loading, progress }: LoadingProps) {
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-semibold text-white">
-                            Gerando Modelo
+                            {currentInfo.title}
                         </h2>
 
                         <h1 className="text-sm text-zinc-400">
-                            Processando malha 3D...
+                            {currentInfo.subtitle}
                         </h1>
                     </div>
 

@@ -10,6 +10,7 @@ export default function Studio() {
     generate,
     loading,
     progress,
+    step,
     modelUrl: generatedModelUrl 
   } = useGenerateModel();
 
@@ -21,7 +22,6 @@ export default function Studio() {
     }
   }, [generatedModelUrl]);
 
-  // NOVO: Salva no cache sempre que o activeModelUrl for atualizado
   useEffect(() => {
     if (activeModelUrl) {
       localStorage.setItem('@neuro-mesh:last-model-url', activeModelUrl);
@@ -36,6 +36,7 @@ export default function Studio() {
         onGenerate={generate}
         loading={loading}
         progress={progress}
+        step={step}
       />
     </main>
   )
