@@ -25,6 +25,10 @@ export function LoadingModel({ loading, progress, step }: LoadingProps) {
         rigging: {
             title: "Aplicando Rigging",
             subtitle: "Estruturando articulações no modelo..."
+        },
+        animating: {
+            title: "Gerando Animação",
+            subtitle: "Aplicando animações e finalizando o modelo GLB..."
         }
     };
     

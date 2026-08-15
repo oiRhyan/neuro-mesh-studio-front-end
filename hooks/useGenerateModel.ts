@@ -3,6 +3,7 @@
 import { checkRiggModel, createModel, getModelStatus, executeRiggModel } from '@/app/services/ModelService';
 import { useState } from 'react';
 
+// Removido o 'animating'
 export type GenerationStep = 'idle' | 'generating' | 'checking_rig' | 'rigging';
 
 export function useGenerateModel() {
@@ -53,6 +54,7 @@ export function useGenerateModel() {
             setLoading(true);
             setModelUrl(undefined);
 
+            // 1. Geração do Modelo Base
             setStep('generating');
             setProgress(0);
             
@@ -65,58 +67,54 @@ export function useGenerateModel() {
             const baseTaskId = createResponse?.data?.taskId || createResponse?.data?.task_id || 
                                createResponse?.taskId || createResponse?.task_id;
                                
-            console.log("[Model Pipeline] Base TaskId:", baseTaskId);
-            
             if (!baseTaskId) {
                 throw new Error("Não foi possível obter o task_id da criação do modelo.");
             }
 
             await pollUntilSuccess(baseTaskId, "Generation");
 
+            // 2. Checagem de Rig
             setStep('checking_rig');
             setProgress(0);
             
             const checkResponse: any = await checkRiggModel(baseTaskId);
             const checkTaskId = checkResponse?.data?.taskId || checkResponse?.data?.task_id || 
                                 checkResponse?.taskId || checkResponse?.task_id;
-                                
-            console.log("[Model Pipeline] Checking Rig TaskId:", checkTaskId);
 
             if (!checkTaskId) {
-                throw new Error("Não foi possível obter o task_id do Rigg Check.");
+                throw new Error("Não foi possível obter o task_id do Rig Check.");
             }
 
             const checkStatus = await pollUntilSuccess(checkTaskId, "Rig Check");
             
             let rigType = checkStatus.output?.rig_type || checkStatus.Rig_type || checkStatus.rig_type;
             if (rigType === "other" || !rigType) {
-                rigType = "bipped";
+                rigType = "biped";
             }
-            console.log("[Model Pipeline] Rig Type selecionado:", rigType);
 
+            // 3. Execução do Rigging
             setStep('rigging');
             setProgress(0);
             
             const rigResponse: any = await executeRiggModel(baseTaskId, rigType);
-            const rigTaskId = rigResponse?.data?.taskId || rigResponse?.data?.task_id || 
-                              rigResponse?.taskId || rigResponse?.task_id;
-                              
-            console.log("[Model Pipeline] Rigging TaskId:", rigTaskId);
+            const rigTaskId = rigResponse?.data?.task_id || rigResponse?.data?.taskId || 
+                              rigResponse?.task_id || rigResponse?.taskId;
 
             if (!rigTaskId) {
-                throw new Error("Não foi possível obter o task_id da execução do Rig.");
+                throw new Error("Não foi possível obter o task_id do Rig.");
             }
 
+            // Aguarda o Rigging atingir 100% / success
             const rigStatus = await pollUntilSuccess(rigTaskId, "Rigging Execution");
+            
+            // 4. Obtenção da URL Final do Modelo GLB direto do Rigging (pula animação)
+            const finalGlbUrl = rigStatus.output?.model_url || rigStatus.ModelUrl || rigStatus.model_url;
 
-            const glbUrl = rigStatus.output?.model_url || rigStatus.ModelUrl || rigStatus.model_url;
-            console.log("[Model Pipeline] Final GLB URL:", glbUrl);
-
-            if (glbUrl) {
-                const proxiedUrl = `https://localhost:7103/api/Tripo/download?url=${encodeURIComponent(glbUrl)}`;
+            if (finalGlbUrl) {
+                const proxiedUrl = `https://localhost:7103/api/Tripo/download?url=${encodeURIComponent(finalGlbUrl)}`;
                 setModelUrl(proxiedUrl);
             } else {
-                throw new Error("O processo finalizou, mas a URL do modelo 3D não foi retornada.");
+                throw new Error("O Rigging foi concluído, mas a URL do modelo GLB não foi retornada.");
             }
 
         } catch (error: any) {

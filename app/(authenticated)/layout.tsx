@@ -23,6 +23,7 @@ import {
 import { useRouter } from 'next/navigation';
 import QueryProvider from "../providers/QuerClientProvider";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
 
 const poppins = Poppins({
     style: 'normal',
@@ -39,6 +40,13 @@ export default function AutheticatedLayout({
     const navigation = useRouter();
     const userReference = Cookies.get("user");
     const user = userReference ? JSON.parse(userReference) : "";
+
+    useEffect(() => {
+     const userToken = Cookies.get("access-token");
+     if(!userToken) {
+        navigation.replace("/login");
+     }
+    }, []);
 
     return (
         <QueryProvider>
@@ -98,7 +106,10 @@ export default function AutheticatedLayout({
                             <AlertDialogFooter className="modal-buttons">
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction className="bg-purple-800 hover:bg-purple-900" onClick={
-                                    () => navigation.replace('/')
+                                    () => {
+                                        Cookies.remove("access-token");
+                                        navigation.replace('/');
+                                    }
                                 }>Continuar</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>

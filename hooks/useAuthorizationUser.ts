@@ -13,7 +13,6 @@ type JwtPayload = {
     exp: number;
 };
 
-
 export function useAuthorization(router: AppRouterInstance) {
 
     const loginMutation = useMutation({
@@ -37,7 +36,7 @@ export function useAuthorization(router: AppRouterInstance) {
             );
 
             Cookies.set(
-                "access_token",
+                "access-token",
                 request.token,
                 {
                     expires: expiresAt,

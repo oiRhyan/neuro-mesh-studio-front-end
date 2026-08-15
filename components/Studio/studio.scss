@@ -124,11 +124,12 @@
 
 .floating-models-grid {
   display: grid;
+  grid-template-columns: repeat(2, 102px); 
+  gap: 12px; 
+  justify-content: center; 
   height: 320px;
   font-family: var(--font-poppins);
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   padding-right: 4px;
   --sb-track-color: #232e33;

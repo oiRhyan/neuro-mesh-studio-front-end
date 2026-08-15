@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Search, ChevronRight, Star, Flame, ChevronLeft } from 'lucide-react';
+import { Search, ChevronRight, Star, Flame, ChevronLeft, Cookie } from 'lucide-react';
 import Image from 'next/image';
 import Logo from '../../../public/image/logo.png';
 import TopModel from '../../../public/image/card2.png';
@@ -16,6 +16,8 @@ import { getPublicModels } from '@/app/services/ModelService';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ModelDetailsModal } from '@/components/Studio/ModelViewer/ModalDetailsViewer';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 const HomePreviewCanvas = dynamic(
    () => import('@/components/Studio/ModelViewer/HomePreviewCanvas').then((mod) => mod.HomePreviewCanvas),
@@ -37,7 +39,9 @@ export default function Home() {
 
    useEffect(() => {
       const cachedModel = localStorage.getItem('@neuro-mesh:last-model-url');
-      if (cachedModel) {
+      if (!cachedModel) {
+         return;
+      } else {
          setLastModelUrl(cachedModel);
       }
    }, []);
@@ -80,9 +84,8 @@ export default function Home() {
                   <button
                      key={tab}
                      onClick={() => setCurrentTab(tab)}
-                     className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                        tab === currentTab ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
-                     }`}
+                     className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${tab === currentTab ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
                   >
                      {tab}
                   </button>
@@ -172,7 +175,7 @@ export default function Home() {
                                  Lançamento! <Flame className="text-orange-500" size={24} />
                               </h3>
                               <p className="fontfamily text-gray-400 text-sm mt-4">
-                                 NeuroMeshStudio está oficialmente disponível! Crie e salve seus modelos favoritos, compartilhe com a comunidade e nos dê seu feedback.
+                                 NeuroMeshStudio está oficialmente<br></br>disponível! Crie e salve seus<br></br>modelos favoritos,<br></br>compartilhe com a comunidade<br></br>e nos dê seu feedback.
                               </p>
                            </div>
                            <div className="bg-black/50 fontfamily backdrop-blur-md self-start rounded-full px-3 py-1.5 flex items-center gap-1 border border-white/10 mt-auto">
@@ -284,11 +287,19 @@ export default function Home() {
                      </div>
 
                      <div className="bg-gradient-to-br from-indigo-900/10 to-[#121216]/80 backdrop-blur-md border border-white/10 rounded-3xl p-5 flex-[0.8] flex flex-col justify-between relative overflow-hidden group cursor-pointer">
-                        <div className="flex justify-between items-center relative z-10">
-                           <span className="fontfamily text-lg font-bold tracking-wider text-white">Status da plataforma</span>
+                        <div className="relative z-10 flex flex-col gap-1.5">
+                           <div className="flex justify-between items-center">
+                              <span className="fontfamily text-lg font-bold tracking-wider text-white">Status da plataforma</span>
+                           </div>
+                           <p className="text-xs fontfamily text-gray-100 leading-relaxed pr-2">
+                              Aqui você confere os status da plataforma e o funcionamento atual dos serviços.
+                           </p>
                         </div>
-                        <p className="text-xs text-gray-300 relative z-10 mt-2">GPU Cluster Operacional</p>
-                        <div className="absolute right-[-20px] bottom-[-20px] w-24 h-24 bg-green-500/20 rounded-full blur-xl" />
+                        <div className="flex items-center gap-2.5 relative z-10 mt-4">
+                           <div className="w-3.5 h-3.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_12px_rgba(34,197,94,0.9)]" />
+                           <p className="text-sm fontfamily text-gray-300">GPU Cluster Operacional</p>
+                        </div>
+                        <div className="absolute right-[-20px] bottom-[-20px] w-24 h-24 bg-green-500/20 rounded-full blur-xl group-hover:bg-green-500/30 transition-colors duration-500" />
                      </div>
                   </div>
                </>
@@ -310,8 +321,8 @@ export default function Home() {
                            return (
                               <>
                                  {selectedItems.map((m: any, index: number) => (
-                                    <div 
-                                       key={m.id || index} 
+                                    <div
+                                       key={m.id || index}
                                        onClick={() => {
                                           setSelectedModelData(m);
                                           setIsModalOpen(true);
@@ -345,7 +356,7 @@ export default function Home() {
                                                 className={`w-8 h-8 flex items-center justify-center rounded-xl border text-[11px] transition-all cursor-pointer ${page === currentPage
                                                    ? 'bg-purple-500/10 border-purple-500/40 text-purple-400 font-semibold'
                                                    : 'bg-transparent border-transparent hover:bg-white/5 hover:text-white'
-                                                }`}
+                                                   }`}
                                              >
                                                 {page}
                                              </button>

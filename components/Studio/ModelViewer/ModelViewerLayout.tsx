@@ -50,25 +50,7 @@ export function ModelViewerLayout({
       <div className="viewer-container">
         <ViewerTopbar />
         
-        <ViewerCanvas modelUrl={modelUrl} isTaunting={isTaunting} />
-        
-        <div style={{ position: 'absolute', top: '80px', right: '20px', zIndex: 10 } }>
-          <button 
-            onClick={() => setIsTaunting(!isTaunting)}
-            style={{
-              padding: '10px 16px',
-              backgroundColor: isTaunting ? '#ef4444' : '#6366f1',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
-            }}
-          >
-            {isTaunting ? 'Parar Taunt' : 'Executar Taunt 🎬'}
-          </button>
-        </div>
+        <ViewerCanvas modelUrl={modelUrl} />
 
         <div className="left-panel">
           <ModelList 

@@ -101,3 +101,12 @@ export async function executeRiggModel(
     });
     return response.data;
 }
+
+export async function animateModel(
+    task_id: string
+) {
+    const response = await tripoApi.post<RiggExecutorResponse>("Tripo/models/animation", {
+        input: task_id
+    });;
+    return response.data;
+}

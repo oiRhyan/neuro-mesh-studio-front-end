@@ -7,7 +7,7 @@ export const tripoApi = axios.create({
 });
 
 tripoApi.interceptors.request.use((config) => {
-  const token = Cookies.get("access_token");
+  const token = Cookies.get("access-token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

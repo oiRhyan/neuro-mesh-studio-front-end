@@ -244,8 +244,19 @@ export function ModelToolbar({ modelUrl, modelId, onModelSaved }: ModelToolBarPr
             </DialogDescription>
           </DialogHeader>
           <div className='w-full flex gap-5 justify-end'>
-            <Button className='fontfamily' onClick={() => deleteMutation.mutateAsync(modelId)}>
-              Excluir
+            <Button className='fontfamily' disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutateAsync(modelId)}>
+              {
+                deleteMutation.isPending ? (
+                   <>
+                    <Spinner/>
+                    Excluindo...
+                   </>
+                ) :  (
+                   <>
+                    Excluir
+                   </>
+                )
+              }
             </Button>
             <Button className='fontfamily text-black' variant={'outline'} onClick={() => setDeleteIsOpen(false)}>
               Cancelar
