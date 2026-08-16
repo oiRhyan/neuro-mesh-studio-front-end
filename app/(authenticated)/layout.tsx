@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { FaChevronCircleLeft } from "react-icons/fa";
 import { Navbar } from "@/components/Navbar/Navbar";
+import { jwtDecode } from "jwt-decode";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -24,6 +25,10 @@ import { useRouter } from 'next/navigation';
 import QueryProvider from "../providers/QuerClientProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
+
+type JwtPayload = {
+    exp: number;
+}
 
 const poppins = Poppins({
     style: 'normal',
@@ -45,8 +50,24 @@ export default function AutheticatedLayout({
      const userToken = Cookies.get("access-token");
      if(!userToken) {
         navigation.replace("/login");
+        return;
      }
-    }, []);
+
+     try {
+        const decoded = jwtDecode<JwtPayload>(userToken);
+
+        if(decoded.exp < Date.now() / 1000) {
+           Cookies.remove("access-token");
+           Cookies.remove("user");
+           navigation.replace("/login");
+        }
+     } catch(error) {
+        console.warn(error);
+        Cookies.remove("access-token");
+        Cookies.remove("user");
+        navigation.replace("/login");
+     }
+    }, [navigation]);
 
     return (
         <QueryProvider>
