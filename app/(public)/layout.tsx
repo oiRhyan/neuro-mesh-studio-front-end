@@ -1,6 +1,8 @@
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { Poppins} from "next/font/google";
+import QueryProvider from "../providers/QuerClientProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const poppins = Poppins({
   style: 'normal',
@@ -15,11 +17,14 @@ export default function PublicLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
+    <main
       lang="pt-br"
       className={cn("h-full", "antialiased", "font-sans", poppins.variable)}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
+      <QueryProvider>
+          {children}
+          <Toaster/>
+      </QueryProvider>
+    </main>
   );
 }
