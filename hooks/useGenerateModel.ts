@@ -111,7 +111,7 @@ export function useGenerateModel() {
             const finalGlbUrl = rigStatus.output?.model_url || rigStatus.ModelUrl || rigStatus.model_url;
 
             if (finalGlbUrl) {
-                const proxiedUrl = `https://localhost:7103/api/Tripo/download?url=${encodeURIComponent(finalGlbUrl)}`;
+                const proxiedUrl = `https://neuromeshstudio-g2gba3chgehkgncv.brazilsouth-01.azurewebsites.net/api/Tripo/download?url=${encodeURIComponent(finalGlbUrl)}`;
                 setModelUrl(proxiedUrl);
             } else {
                 throw new Error("O Rigging foi concluído, mas a URL do modelo GLB não foi retornada.");
