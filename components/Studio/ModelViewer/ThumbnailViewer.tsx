@@ -4,8 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { SkeletonUtils } from 'three-stdlib'
-import { OrbitControls, Center, ContactShadows, useGLTF } from '@react-three/drei'
-import { BackgroundGradient } from './BackgroundForModel/BackgroundGradient' // Mantenha seus imports
+import { OrbitControls, Center, ContactShadows, useGLTF, Environment } from '@react-three/drei'
 
 function Model({ url }: { url: string }) {
   if (!url) return null
@@ -20,9 +19,7 @@ function Model({ url }: { url: string }) {
 
   const { scene } = useGLTF(url)
 
-  // Clona a cena e aplica a limpeza do Rig de forma segura
   const { clonedScene, scaleFactor } = useMemo(() => {
-    // Uso obrigatório do SkeletonUtils para não corromper modelos com RIG
     const clone = SkeletonUtils.clone(scene)
     const itemsToRemove: any[] = []
 
@@ -90,9 +87,8 @@ function Model({ url }: { url: string }) {
   return (
     <Center 
       bottom 
-      position={[0, 1, 0]} // Alinhado com a sombra de contato
+      position={[0, 1, 0]}
     >
-      {/* O <group> encapsula a escala preservando os cálculos dos ossos */}
       <group scale={scaleFactor}>
         <primitive object={clonedScene} dispose={null} />
       </group>
@@ -131,7 +127,8 @@ export function ThumbnailViewer({ modelUrl, onCaptureReady }: ThumbnailViewerPro
     <div className="thumbnail-viewer" style={{ width: '100%', height: '250px', position: 'relative' }}>
       <Canvas
         gl={{
-          preserveDrawingBuffer: true
+          preserveDrawingBuffer: true,
+          toneMappingExposure: 1.2
         }}
         camera={{
           position: [4, 2, 6],
@@ -139,13 +136,12 @@ export function ThumbnailViewer({ modelUrl, onCaptureReady }: ThumbnailViewerPro
         }}
       >
         <ThumbnailCapture onCaptureReady={onCaptureReady} />
-
-        <ambientLight intensity={1.5} />
-        <directionalLight intensity={3} position={[5, 10, 5]} />
-        
-        <Model url={modelUrl} />
-
-        <ContactShadows position={[0, -1, 0]} opacity={0.4} scale={10} />
+        <Environment preset="city" /> 
+        <ambientLight intensity={0.8} />
+        <directionalLight intensity={2.5} position={[5, 10, 5]} />
+        <directionalLight intensity={1.5} position={[-5, 5, -5]} color="#ffffff" />
+        <directionalLight intensity={1} position={[0, 5, -10]} />
+        <Model url={modelUrl} />        <ContactShadows position={[0, -1, 0]} opacity={0.5} scale={10} blur={2} />
         <OrbitControls enableDamping />
       </Canvas>
     </div>

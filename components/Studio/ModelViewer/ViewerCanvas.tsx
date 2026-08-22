@@ -449,8 +449,8 @@ export function ViewerCanvas({
         />
 
         <GizmoHelper
-          alignment="bottom-right"
-          margin={[70, 70]}
+          alignment="top-right"
+          margin={[70, 80]}
         >
           <GizmoViewport />
         </GizmoHelper>
