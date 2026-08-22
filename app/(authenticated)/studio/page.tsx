@@ -15,6 +15,15 @@ export default function Studio() {
   } = useGenerateModel();
 
   const [activeModelUrl, setActiveModelUrl] = useState<string | undefined>();
+  const [activeModelId, setActiveModelId] = useState<string>('');
+
+  useEffect(() => {
+    const cachedUrl = localStorage.getItem('@neuro-mesh:last-model-url');
+    const cachedId = localStorage.getItem('@neuro-mesh:last-model-id');
+
+    if (cachedUrl) setActiveModelUrl(cachedUrl);
+    if (cachedId) setActiveModelId(cachedId);
+  }, []);
 
   useEffect(() => {
     if (generatedModelUrl) {
@@ -28,11 +37,23 @@ export default function Studio() {
     }
   }, [activeModelUrl]);
 
+  useEffect(() => {
+    if (activeModelId) {
+      localStorage.setItem('@neuro-mesh:last-model-id', activeModelId);
+    } else {
+      localStorage.removeItem('@neuro-mesh:last-model-id');
+    }
+  }, [activeModelId]);
+
   return (
     <main className="studio-page">
       <ModelViewerLayout
         modelUrl={activeModelUrl}
-        onSelectModel={setActiveModelUrl}
+        modelId={activeModelId}
+        onSelectModel={(url, id) => {
+          setActiveModelUrl(url);
+          if (id !== undefined) setActiveModelId(id);
+        }}
         onGenerate={generate}
         loading={loading}
         progress={progress}
