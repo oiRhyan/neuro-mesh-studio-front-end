@@ -39,6 +39,7 @@ import { loginSchema } from '@/types/schemas/login.schema';
 import z from 'zod';
 import { registerUserSchema, RegisterUserSchema } from '@/types/schemas/register.schema';
 import { RegisterUser } from '@/app/services/UserService';
+import Cookies from 'js-cookie';
 
 type LoginUserRequestForm = z.infer<typeof loginSchema>
 
@@ -84,6 +85,9 @@ export default function Login() {
 
    const onLoginSucess = async (data: LoginUserRequestForm) => {
       console.log("[LoginForm] Dados validados, chamando API");
+
+      Cookies.remove("access-token", { path: '/' });
+      Cookies.remove("user", { path: '/' });
 
       const formData: LoginRequestForm = {
          email: data.email,

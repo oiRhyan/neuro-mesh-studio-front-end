@@ -41,6 +41,7 @@ export function useAuthorization(router: AppRouterInstance) {
                 {
                     expires: expiresAt,
                     sameSite: "strict",
+                    path: "/"
                 }
             );
 
@@ -50,6 +51,7 @@ export function useAuthorization(router: AppRouterInstance) {
                 {
                     expires: expiresAt,
                     sameSite: "strict",
+                    path: "/"
                 }
             );
 

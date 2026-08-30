@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 export const tripoApi = axios.create({
   baseURL: "https://neuromeshstudio-g2gba3chgehkgncv.brazilsouth-01.azurewebsites.net/api",
-  timeout: 20000,
+  timeout: 50000,
 });
 
 tripoApi.interceptors.request.use((config) => {
@@ -13,3 +13,19 @@ tripoApi.interceptors.request.use((config) => {
   }
   return config;
 });
+
+tripoApi.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      Cookies.remove("access-token", { path: '/' });
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'; 
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);

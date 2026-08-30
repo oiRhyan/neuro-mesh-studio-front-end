@@ -14,7 +14,6 @@ import { getListModels } from '@/app/services/ModelService'
 import { TbCube3dSphere } from "react-icons/tb";
 
 export type ModelListProps = {
-  // Unificado em um único callback
   onSelectModel: (url: string, id: string) => void;
 }
 
@@ -60,7 +59,7 @@ export function ModelList({ onSelectModel }: ModelListProps) {
               key={m.id}
               title={m.title}
               thumbnail={m.thumbnail}
-              onClick={() => onSelectModel(m.model, m.id)} // Passa URL e ID juntas
+              onClick={() => onSelectModel(m.model, m.id)}
             />
           ))
         }
