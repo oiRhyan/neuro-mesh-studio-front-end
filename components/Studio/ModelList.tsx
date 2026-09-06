@@ -12,6 +12,8 @@ import { useQuery } from '@tanstack/react-query'
 import Cookies from 'js-cookie'
 import { getListModels } from '@/app/services/ModelService'
 import { TbCube3dSphere } from "react-icons/tb";
+import { useEffect, useState } from 'react'
+import { SavedModels } from '@/types/ModelRequest'
 
 export type ModelListProps = {
   onSelectModel: (url: string, id: string) => void;
@@ -20,12 +22,24 @@ export type ModelListProps = {
 export function ModelList({ onSelectModel }: ModelListProps) {
   const userCookie = Cookies.get("user");
   const user = userCookie ? JSON.parse(userCookie) : {};
+  const [searchingModel, setSearchingModel] = useState<string>();
+  const [filterData, setFilterData] = useState<SavedModels[] | []>([]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['userModels', user?.id],
     queryFn: () => getListModels(user.id),
     enabled: !!user?.id,
   });
+
+  useEffect(() => {
+     if(!data) return;
+     if(searchingModel) {
+       const filter = data.models.filter(model => model.title.includes(searchingModel));
+       setFilterData(filter);
+     } else {
+      setFilterData([]);
+     }
+  }, [searchingModel]);
 
   return (
     <aside className="floating-models flex flex-col h-full overflow-hidden">
@@ -38,6 +52,8 @@ export function ModelList({ onSelectModel }: ModelListProps) {
           <InputGroupInput
             type="search"
             placeholder="Pesquisar..."
+            value={searchingModel}
+            onChange={(value) => setSearchingModel(value.target.value)}
           />
           <InputGroupAddon align="inline-end">
             <FaSearch color="white" />
@@ -53,15 +69,22 @@ export function ModelList({ onSelectModel }: ModelListProps) {
       )}
       
       <div className="floating-models-grid flex-1 overflow-y-auto">
-        {
-          data?.models.map(m => (
-            <ModelCard
+        { filterData.length > 0 ?
+          filterData.map(m => (
+             <ModelCard
               key={m.id}
               title={m.title}
               thumbnail={m.thumbnail}
               onClick={() => onSelectModel(m.model, m.id)}
             />
-          ))
+          )) : data?.models.map(m => (
+              <ModelCard
+                key={m.id}
+                title={m.title}
+                thumbnail={m.thumbnail}
+                onClick={() => onSelectModel(m.model, m.id)}
+              />
+            ))
         }
       </div>
     </aside>

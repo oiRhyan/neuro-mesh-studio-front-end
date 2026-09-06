@@ -61,7 +61,6 @@ export function GenerationPanel({ onGenerate, loading }: Props) {
         )
         }
       </Button>
-
     </div>
   )
 }
