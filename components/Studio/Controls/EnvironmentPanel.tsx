@@ -14,7 +14,6 @@ export function EnvironmentPanel() {
       <div className='environment-panel-image'>
         <Image src='/image/studio-banner.png' fill alt='banner' className='rounded-xl'/>
       </div>
-
     </div>
   )
 }
