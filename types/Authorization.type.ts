@@ -4,7 +4,6 @@ export interface LoginRequestForm {
 }
 
 export interface LoginRequestResponse {
-    token: string,
     generateAt: Date,
     user: {
         id: string,
@@ -14,4 +13,9 @@ export interface LoginRequestResponse {
         biography: string,
     },
     error?: string
+}
+
+export interface CheckSessionType {
+    id: string,
+    name: string
 }

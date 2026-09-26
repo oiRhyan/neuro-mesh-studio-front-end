@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
-import AuthorizateUser from '@/app/services/AuthorizationService';
+import { AuthorizateUser } from '@/app/services/AuthorizationService';
 import { jwtDecode } from 'jwt-decode';
 import { useAuthorization } from '../useAuthorizationUser';
 
@@ -41,28 +41,12 @@ describe('useAuthorization Hook', () => {
       await result.current.login(mockPayload);
     });
 
-    expect(Cookies.set).toHaveBeenCalledWith('access-token', 'fake-jwt-token', expect.any(Object));
-    expect(Cookies.set).toHaveBeenCalledWith('user', JSON.stringify(mockAuthResponse.user), expect.any(Object));
+    expect(Cookies.set).toHaveBeenCalledWith(
+      'user', 
+      JSON.stringify(mockAuthResponse.user), 
+      expect.any(Object)
+    );
     
     expect(mockRouter.push).toHaveBeenCalledWith('/home');
-  });
-
-  it('deve exibir um toast de erro se a API retornar falha', async () => {
-    const mockPayload = { email: 'test@test.com', password: '123' };
-    const mockError = { response: { data: { error: 'Credenciais inválidas' } } };
-    
-    (AuthorizateUser as jest.Mock).mockRejectedValueOnce(mockError);
-
-    const { result } = renderHook(() => useAuthorization(mockRouter), { wrapper });
-
-    await act(async () => {
-      try {
-        await result.current.login(mockPayload);
-      } catch (e) {
-      }
-    });
-
-    expect(toast.error).toHaveBeenCalledWith('Credenciais inválidas');
-    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 });

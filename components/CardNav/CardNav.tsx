@@ -167,18 +167,6 @@ const CardNav: React.FC<CardNavProps> = ({
         className={`card-nav ${isExpanded ? 'open' : ''}`}
       >
         <div className="card-nav-top">
-          <div
-            className={`hamburger-menu ${isHamburgerOpen ? 'open' : ''}`}
-            onClick={toggleMenu}
-            role="button"
-            aria-label={isExpanded ? 'Close menu' : 'Open menu'}
-            tabIndex={0}
-            style={{ color: menuColor || '#000' }}
-          >
-            <div className="hamburger-line" />
-            <div className="hamburger-line" />
-          </div>
-
           <div className="logo-container">
             <Image
               src={logo}
@@ -189,15 +177,6 @@ const CardNav: React.FC<CardNavProps> = ({
               priority
             />
           </div>
-
-          <button
-            type="button"
-            className="card-nav-cta-button"
-            style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
-            onClick={(event) => onClick?.('/login')}
-          >
-            Entrar
-          </button>
         </div>
 
         <div className="card-nav-content" aria-hidden={!isExpanded}>

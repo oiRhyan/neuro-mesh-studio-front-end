@@ -16,7 +16,6 @@ import { getPublicModels } from '@/app/services/ModelService';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ModelDetailsModal } from '@/components/Studio/ModelViewer/ModalDetailsViewer';
-import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 
 const HomePreviewCanvas = dynamic(
