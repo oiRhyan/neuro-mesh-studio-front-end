@@ -18,6 +18,7 @@ export function useAuthorization(router: AppRouterInstance) {
                 "user",
                 JSON.stringify(request.user),
                 {
+                    expires: 8,
                     sameSite: "strict",
                     path: "/"
                 }
