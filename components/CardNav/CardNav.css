@@ -94,6 +94,7 @@
 }
 
 .card-nav-cta-button {
+  display: flex;
   background-color: #ffffff;
   color: black;
   border: none;
@@ -118,7 +119,7 @@
   bottom: 0;
   padding: 0.5rem;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
   visibility: hidden;
   pointer-events: none;
@@ -132,7 +133,7 @@
 
 .nav-card {
   height: 100%;
-  flex: 1 1 0;
+  flex: 1 0 0;
   min-width: 0;
   border-radius: calc(0.75rem - 0.2rem);
   position: relative;

@@ -3,13 +3,11 @@ import { AnimatedBackground } from "@/components/background/AnimatedBackground";
 import "../(authenticated)/authenticated.scss";
 import { cn } from "@/lib/utils";
 import { Poppins } from "next/font/google";
-import Cookies from "js-cookie";
 import Image from 'next/image';
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { FaChevronCircleLeft } from "react-icons/fa";
 import { Navbar } from "@/components/Navbar/Navbar";
-import { jwtDecode } from "jwt-decode";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -24,10 +22,20 @@ import {
 import { useRouter } from 'next/navigation';
 import QueryProvider from "../providers/QuerClientProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { useEffect } from "react";
+import Cookies from "js-cookie";
+import { useQuery } from "@tanstack/react-query";
+import { checkUserSession, logout } from "../services/AuthorizationService";
+import { useEffect, useState } from "react";
+import { CheckSessionType } from "@/types/Authorization.type";
+import { tripoApi } from "../core/api";
+import axios from "axios";
 
-type JwtPayload = {
-    exp: number;
+interface User {
+    id: string,
+    userName: string,
+    imageProfile: string,
+    banner: string,
+    biography: string,
 }
 
 const poppins = Poppins({
@@ -42,32 +50,27 @@ export default function AutheticatedLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const navigation = useRouter();
-    const userReference = Cookies.get("user");
-    const user = userReference ? JSON.parse(userReference) : "";
+    const router = useRouter();
+    const cookie = Cookies.get("user") ?? null;
+    const user: User = cookie ? JSON.parse(cookie) : {}
+
+    async function checkUserSession(): Promise<CheckSessionType | null> {
+        try {
+            const response = await tripoApi.get("User/me");
+            return response.data;
+        } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+            router.replace("/login");
+            return null;
+        }
+
+        throw error;
+        }
+    }   
 
     useEffect(() => {
-     const userToken = Cookies.get("access-token");
-     if(!userToken) {
-        navigation.replace("/login");
-        return;
-     }
-
-     try {
-        const decoded = jwtDecode<JwtPayload>(userToken);
-
-        if(decoded.exp < Date.now() / 1000) {
-           Cookies.remove("access-token");
-           Cookies.remove("user");
-           navigation.replace("/login");
-        }
-     } catch(error) {
-        console.warn(error);
-        Cookies.remove("access-token");
-        Cookies.remove("user");
-        navigation.replace("/login");
-     }
-    }, [navigation]);
+       checkUserSession(); 
+    }, []);
 
     return (
         <QueryProvider>
@@ -83,7 +86,6 @@ export default function AutheticatedLayout({
                     <AnimatedBackground />
                 </div>
 
-                {/* Margens de vidro reduzidas para não espremer o painel */}
                 <div
                     className="absolute z-10 pointer-events-none"
                     style={{
@@ -128,8 +130,8 @@ export default function AutheticatedLayout({
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction className="bg-purple-800 hover:bg-purple-900" onClick={
                                     () => {
-                                        Cookies.remove("access-token");
-                                        navigation.replace('/');
+                                        logout();
+                                        router.replace('/');
                                     }
                                 }>Continuar</AlertDialogAction>
                             </AlertDialogFooter>

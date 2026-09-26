@@ -13,9 +13,28 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { checkUserSession } from '../services/AuthorizationService';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 export default function Home() {
   const router: AppRouterInstance = useRouter();
+
+  const { data: authSession, isLoading, isError, error } = useQuery({
+      queryKey: ['auth-check'],
+      queryFn: checkUserSession
+    })
+  
+    useEffect(() => {
+    if (isLoading) {
+        return;
+    }
+
+    if (authSession) {
+        console.log("logado");
+        router.replace("/home");
+    }
+  }, [isLoading, authSession, router]);
 
   const items = [
     {
@@ -88,13 +107,11 @@ export default function Home() {
           menuColor="#FFFFFF"
           buttonBgColor="#FFFFFF"
           buttonTextColor="#121212"
-          ease="power3.out"
           onClick={
             () => router.push('/login')
           }
         />
         <div className="main-container">
-          {/* Coluna 1: Textos da Esquerda */}
           <div className="main-texts">
             <h1>Seu HUB pessoal de Modelagem 3D com IA</h1>
             <h2>
@@ -117,8 +134,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Coluna 2: Imagem Central */}
           <div className="main-image">
             <Image
               src={models}
@@ -129,8 +144,6 @@ export default function Home() {
               className="hero-model-image"
             />
           </div>
-
-          {/* Coluna 3: Textos da Direita (Sem o container extra em volta) */}
           <div className="main-texts-2">
             <h2>Integração de texturas</h2>
             <h4>Seus modelos são gerados com texturas de alta qualidade em segundos</h4>
