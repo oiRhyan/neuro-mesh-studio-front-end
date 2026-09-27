@@ -24,9 +24,9 @@ import Image from 'next/image';
 import Models from '../../../public/image/pikachu_remake.png';
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { RegisterUserForm } from '@/types/User.type';
 import { toast } from 'sonner';
 import { LoginRequestForm } from '@/types/Authorization.type';
@@ -36,6 +36,8 @@ import { loginSchema } from '@/types/schemas/login.schema';
 import z from 'zod';
 import { registerUserSchema, RegisterUserSchema } from '@/types/schemas/register.schema';
 import { loginAction, registerUserAction } from '@/app/actions/auth';
+import { checkUserSession } from '@/app/services/AuthorizationService';
+import { useRouter } from 'next/router';
 
 type LoginUserRequestForm = z.infer<typeof loginSchema>
 
@@ -54,6 +56,7 @@ export default function Login() {
          biography: ''
       }
    })
+   const router = useRouter();
    const loginForm = useForm<LoginUserRequestForm>({
       resolver: zodResolver(loginSchema),
       defaultValues: {
@@ -61,6 +64,22 @@ export default function Login() {
          password: ''
       }
    });
+
+   const { data: authSession, isLoading, isError, error } = useQuery({
+      queryKey: ['auth-check'],
+      queryFn: checkUserSession
+    })
+  
+    useEffect(() => {
+    if (isLoading) {
+        return;
+    }
+
+    if (authSession) {
+        console.log("logado");
+        router.replace("/home");
+    }
+  }, [isLoading, authSession, router]);
 
    const { register, handleSubmit, formState: { errors } } = loginForm;
    const { register: inputRegister, handleSubmit: handleRegister, formState: { errors: registerErrors }, watch, setValue } = registerFrom;
