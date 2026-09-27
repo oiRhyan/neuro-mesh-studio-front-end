@@ -37,7 +37,7 @@ import z from 'zod';
 import { registerUserSchema, RegisterUserSchema } from '@/types/schemas/register.schema';
 import { loginAction, registerUserAction } from '@/app/actions/auth';
 import { checkUserSession } from '@/app/services/AuthorizationService';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 type LoginUserRequestForm = z.infer<typeof loginSchema>
 

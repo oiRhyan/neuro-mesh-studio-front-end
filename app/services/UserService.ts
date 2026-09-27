@@ -44,7 +44,7 @@ export async function UpdateUser(
    const response = await apiClient.patch<UpdateUserFormResponse>(`User/update/${userId}`, formData, {
        headers: {
             "Content-Type": "multipart/form-data",
-        },
+       },
    });
    return response.data;
 }
