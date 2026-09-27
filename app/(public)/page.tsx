@@ -152,7 +152,7 @@ export default function Home() {
             <h4>Exporte modelos 3D para motores gráficos e game engines</h4>
 
             <h2>Manipulação de Modelo</h2>
-            <h4>Visualize seu modelo 3D em tempo real, você pode criar via chat ou a partir de imagens</h4>
+            <h4>Visualize seu modelo 3D em tempo real, você pode criar a partir de imagens</h4>
           </div>
         </div>
       </section>
