@@ -1,12 +1,14 @@
 import { RegisterUser, UpdateUser, getUserById } from '../UserService';
-import { tripoApi } from '@/app/core/api';
+import { getApiClient } from '@/app/core/api';
+
+const mockApiClient = {
+  post: jest.fn(),
+  patch: jest.fn(),
+  get: jest.fn(),
+};
 
 jest.mock('@/app/core/api', () => ({
-  tripoApi: {
-    post: jest.fn(),
-    patch: jest.fn(),
-    get: jest.fn(),
-  },
+  getApiClient: jest.fn(() => Promise.resolve(mockApiClient)),
 }));
 
 describe('UserService', () => {
@@ -29,14 +31,16 @@ describe('UserService', () => {
       };
 
       const mockResponse = { data: { success: true } };
-      (tripoApi.post as jest.Mock).mockResolvedValueOnce(mockResponse);
+      mockApiClient.post.mockResolvedValueOnce(mockResponse);
 
       const result = await RegisterUser(mockPayload);
 
-      expect(tripoApi.post).toHaveBeenCalledWith('User', expect.any(FormData));
+      expect(mockApiClient.post).toHaveBeenCalledWith('User', expect.any(FormData), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       expect(result).toEqual(mockResponse.data);
 
-      const formData = (tripoApi.post as jest.Mock).mock.calls[0][1] as FormData;
+      const formData = mockApiClient.post.mock.calls[0][1] as FormData;
       expect(formData.get('Name')).toBe('Test User');
       expect(formData.get('Email')).toBe('test@example.com');
       expect(formData.get('Password')).toBe('password123');
@@ -55,13 +59,13 @@ describe('UserService', () => {
         ImageBanner: undefined,
       };
 
-      (tripoApi.post as jest.Mock).mockResolvedValueOnce({ data: {} });
+      mockApiClient.post.mockResolvedValueOnce({ data: {} });
 
       await RegisterUser(mockPayload as any);
 
-      const formData = (tripoApi.post as jest.Mock).mock.calls[0][1] as FormData;
-      expect(formData.get('ImageProfile')).toBe('');
-      expect(formData.get('ImageBanner')).toBe('');
+      const formData = mockApiClient.post.mock.calls[0][1] as FormData;
+      expect(formData.get('ImageProfile')).toBe(null);
+      expect(formData.get('ImageBanner')).toBe(null);
     });
   });
 
@@ -79,14 +83,16 @@ describe('UserService', () => {
       };
 
       const mockResponse = { data: { success: true } };
-      (tripoApi.patch as jest.Mock).mockResolvedValueOnce(mockResponse);
+      mockApiClient.patch.mockResolvedValueOnce(mockResponse);
 
       const result = await UpdateUser(userId, mockPayload);
 
-      expect(tripoApi.patch).toHaveBeenCalledWith(`User/update/${userId}`, expect.any(FormData));
+      expect(mockApiClient.patch).toHaveBeenCalledWith(`User/update/${userId}`, expect.any(FormData), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       expect(result).toEqual(mockResponse.data);
 
-      const formData = (tripoApi.patch as jest.Mock).mock.calls[0][1] as FormData;
+      const formData = mockApiClient.patch.mock.calls[0][1] as FormData;
       expect(formData.get('Name')).toBe('Updated Name');
       expect(formData.get('Biography')).toBe('Updated Bio');
       expect(formData.get('ImageProfile')).toBe(profileFile);
@@ -98,11 +104,11 @@ describe('UserService', () => {
     it('deve buscar o usuario por ID com sucesso', async () => {
       const userId = 'user-123';
       const mockResponse = { data: { id: userId, name: 'Test User' } };
-      (tripoApi.get as jest.Mock).mockResolvedValueOnce(mockResponse);
+      mockApiClient.get.mockResolvedValueOnce(mockResponse);
 
       const result = await getUserById(userId);
 
-      expect(tripoApi.get).toHaveBeenCalledWith(`User/${userId}`);
+      expect(mockApiClient.get).toHaveBeenCalledWith(`User/${userId}`);
       expect(result).toEqual(mockResponse.data);
     });
   });

@@ -1,10 +1,14 @@
 import { createModel } from '../ModelService';
-import { tripoApi } from '@/app/core/api';
+import { getApiClient } from '@/app/core/api';
+
+const mockApiClient = {
+  post: jest.fn(),
+  get: jest.fn(),
+  delete: jest.fn(),
+};
 
 jest.mock('@/app/core/api', () => ({
-  tripoApi: {
-    post: jest.fn(),
-  },
+  getApiClient: jest.fn(() => Promise.resolve(mockApiClient)),
 }));
 
 describe('ModelService', () => {
@@ -13,18 +17,18 @@ describe('ModelService', () => {
   });
 
   it('deve enviar um FormData com os dados corretos ao criar o modelo', async () => {
-    const fakeFile = new File([''], 'image.png', { type: 'image/png' });
+    const file = new File(['model'], 'model.obj', { type: 'model/obj' });
     const mockPayload = {
-      type: 'image_to_model',
-      model_version: 'v3.0-20250812',
-      file: fakeFile,
+      type: 'base',
+      model_version: 'v1',
+      file: file,
     };
 
-    (tripoApi.post as jest.Mock).mockResolvedValueOnce({ data: 'task-123' });
+    mockApiClient.post.mockResolvedValueOnce({ data: 'task-id-123' });
 
     const result = await createModel(mockPayload);
 
-    expect(tripoApi.post).toHaveBeenCalledWith('Tripo', expect.any(FormData));
-    expect(result).toBe('task-123');
+    expect(mockApiClient.post).toHaveBeenCalledWith('Tripo', expect.any(FormData), expect.any(Object));
+    expect(result).toBe('task-id-123');
   });
 });

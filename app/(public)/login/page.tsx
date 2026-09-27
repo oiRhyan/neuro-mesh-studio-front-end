@@ -26,28 +26,24 @@ import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useState } from 'react';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { useRouter } from 'next/navigation';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useMutation } from '@tanstack/react-query';
 import { RegisterUserForm } from '@/types/User.type';
 import { toast } from 'sonner';
 import { LoginRequestForm } from '@/types/Authorization.type';
-import { useAuthorization } from '@/hooks/useAuthorizationUser';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/types/schemas/login.schema';
 import z from 'zod';
 import { registerUserSchema, RegisterUserSchema } from '@/types/schemas/register.schema';
-import { RegisterUser } from '@/app/services/UserService';
-import Cookies from 'js-cookie';
+import { loginAction, registerUserAction } from '@/app/actions/auth';
 
 type LoginUserRequestForm = z.infer<typeof loginSchema>
 
 export default function Login() {
-   const router: AppRouterInstance = useRouter();
    const [seePassword, setSeePassword] = useState<boolean>(false);
    const [imageProfile, setImageProfile] = useState<string | null>(null);
    const [isRegisterForm, setRegisterForm] = useState<boolean>(false);
+   const [isPending, setIsPending] = useState<boolean>(false);
    const registerFrom = useForm<RegisterUserSchema>({
       resolver: zodResolver(registerUserSchema),
       defaultValues: {
@@ -68,7 +64,6 @@ export default function Login() {
 
    const { register, handleSubmit, formState: { errors } } = loginForm;
    const { register: inputRegister, handleSubmit: handleRegister, formState: { errors: registerErrors }, watch, setValue } = registerFrom;
-   const { login, isLoading } = useAuthorization(router);
 
    const Icon = seePassword ? FaRegEyeSlash : FaRegEye
 
@@ -86,19 +81,19 @@ export default function Login() {
    const onLoginSucess = async (data: LoginUserRequestForm) => {
       console.log("[LoginForm] Dados validados, chamando API");
 
-      Cookies.remove("access-token", { path: '/' });
-      Cookies.remove("user", { path: '/' });
-
       const formData: LoginRequestForm = {
          email: data.email,
          password: data.password
       }
 
       try {
-         const response = await login(formData)
+         setIsPending(true);
+         const response = await loginAction(formData);
 
-         if (response) {
-            console.log("[LoginForm] Usuário logado");
+         if (response?.success === false) {
+            toast.error(response.error);
+            setIsPending(false);
+            return;
          }
       } catch (e) {
          console.log(e);
@@ -111,8 +106,8 @@ export default function Login() {
 
    const registerUser = useMutation({
       mutationFn: async (body: RegisterUserForm) => {
-         const req = await RegisterUser(body);
-         return req.Id;
+         const req = await registerUserAction(body);
+         return req?.id;
       },
       onSuccess: () => {
          toast.success("Sucesso ao cadastrar conta!");
@@ -336,7 +331,7 @@ export default function Login() {
                         variant={"default"}
                         type={'button'}
                         title='Login'
-                        disabled={isLoading}
+                        disabled={isPending}
                         className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white mb-4'
                         onClick={handleSubmit(onLoginSucess, onLoginError)}
                      >
