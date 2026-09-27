@@ -1,19 +1,24 @@
+'use server'
 import { CheckSessionType, LoginRequestForm, LoginRequestResponse } from "@/types/Authorization.type";
-import { tripoApi } from "../core/api";
+import { getApiClient } from "../core/api";
 
 export async function AuthorizateUser(
     payload: LoginRequestForm
 ) : Promise<LoginRequestResponse> {
-   const response = await tripoApi.post<LoginRequestResponse>("User/auth", payload);
+   const apiClient = await getApiClient();
+   const response = await apiClient.post<LoginRequestResponse>("User/auth", payload);
+   console.log("[API RESPONSE]", response);
    return response.data;
 }
 
 export async function checkUserSession(): Promise<CheckSessionType> {
-   const response = await tripoApi.get("User/me");
+    const apiClient = await getApiClient();
+   const response = await apiClient.get("User/me");
    return response.data;
 }
 
 export async function logout() {
-    const response = await tripoApi.post("User/logout");
+    const apiClient = await getApiClient();
+    const response = await apiClient.post("User/logout");
     return response.data;
 }

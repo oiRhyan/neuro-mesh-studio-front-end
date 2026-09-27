@@ -23,12 +23,11 @@ import { useRouter } from 'next/navigation';
 import QueryProvider from "../providers/QuerClientProvider";
 import { Toaster } from "@/components/ui/sonner";
 import Cookies from "js-cookie";
-import { useQuery } from "@tanstack/react-query";
-import { checkUserSession, logout } from "../services/AuthorizationService";
 import { useEffect, useState } from "react";
 import { CheckSessionType } from "@/types/Authorization.type";
-import { tripoApi } from "../core/api";
+import { getApiClient } from "../core/api";
 import axios from "axios";
+import { logoutAction } from "../actions/auth";
 
 interface User {
     id: string,
@@ -51,25 +50,18 @@ export default function AutheticatedLayout({
     children: React.ReactNode;
 }>) {
     const router = useRouter();
-    const cookie = Cookies.get("user") ?? null;
-    const user: User = cookie ? JSON.parse(cookie) : {}
-
-    async function checkUserSession(): Promise<CheckSessionType | null> {
-        try {
-            const response = await tripoApi.get("User/me");
-            return response.data;
-        } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-            router.replace("/login");
-            return null;
-        }
-
-        throw error;
-        }
-    }   
-
+    const [user, setUser] = useState<User | null>(null);
     useEffect(() => {
-       checkUserSession(); 
+        const cookie = Cookies.get("user");
+        if (cookie) {
+            try {
+                setUser(JSON.parse(cookie));
+            } catch (error) {
+                console.error("Erro ao interpretar o cookie do usuário:", error);
+            }
+        } else {
+            router.replace("/login");
+        }
     }, []);
 
     return (
@@ -129,9 +121,8 @@ export default function AutheticatedLayout({
                             <AlertDialogFooter className="modal-buttons">
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction className="bg-purple-800 hover:bg-purple-900" onClick={
-                                    () => {
-                                        logout();
-                                        router.replace('/');
+                                    async () => {
+                                        await logoutAction();
                                     }
                                 }>Continuar</AlertDialogAction>
                             </AlertDialogFooter>

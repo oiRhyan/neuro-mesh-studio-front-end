@@ -1,20 +1,31 @@
+'use server'
 import { GetUserByIdResponse, RegisterUserForm, RegisterUserResult, UpdateUserFormRequest, UpdateUserFormResponse } from "@/types/User.type";
-import { tripoApi } from "../core/api";
+import { getApiClient } from "../core/api";
 
 export async function RegisterUser(
     payload: RegisterUserForm
 ) : Promise<RegisterUserResult> {
-    
+    const apiClient = await getApiClient();
     const formData = new FormData();
 
     formData.append("Name", payload.Name);
     formData.append("Email", payload.Email);
     formData.append("Password", payload.Password);
-    formData.append("ImageProfile", payload.ImageProfile ?? '');
-    formData.append("ImageBanner", payload.ImageBanner ?? '');
     formData.append("Biography", payload.Biography);
 
-    const response = await tripoApi.post<RegisterUserResult>("User", formData);
+    if (payload.ImageProfile) {
+        formData.append("ImageProfile", payload.ImageProfile);
+    }
+    if (payload.ImageBanner) {
+        formData.append("ImageBanner", payload.ImageBanner);
+    }
+
+    const response = await apiClient.post<RegisterUserResult>("User", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+
     return response.data;
 }
 
@@ -23,19 +34,25 @@ export async function UpdateUser(
     payload: UpdateUserFormRequest
 ) : Promise<UpdateUserFormResponse> {
    const formData = new FormData();
+   const apiClient = await getApiClient();
 
    formData.append('Name', payload.Name ?? ''),
    formData.append('Biography', payload.Biography ?? ''),
    formData.append('ImageProfile', payload.ImageProfile ?? ''),
    formData.append('ImageBanner', payload.ImageBanner ?? '')
 
-   const response = await tripoApi.patch<UpdateUserFormResponse>(`User/update/${userId}`, formData);
+   const response = await apiClient.patch<UpdateUserFormResponse>(`User/update/${userId}`, formData, {
+       headers: {
+            "Content-Type": "multipart/form-data",
+        },
+   });
    return response.data;
 }
 
 export async function getUserById(
     userId: string
 ) : Promise<GetUserByIdResponse> {
-    const response = await tripoApi.get<GetUserByIdResponse>(`User/${userId}`);
+   const apiClient = await getApiClient();
+   const response = await apiClient.get<GetUserByIdResponse>(`User/${userId}`);
    return response.data;
 }

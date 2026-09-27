@@ -1,4 +1,5 @@
-import { tripoApi } from "../core/api";
+'use server'
+import { getApiClient } from "../core/api";
 import { CreateModelRequest, DeleteModel, PublicModel, PublicModelRequest, RiggCheckModelResponse, RiggExecutorResponse, SavedModels, SaveModelRequest } from "@/types/ModelRequest";
 
 function base64ToBlob(base64Data: string, contentType = 'image/png') {
@@ -14,24 +15,31 @@ function base64ToBlob(base64Data: string, contentType = 'image/png') {
 export async function createModel(
     payload: CreateModelRequest
 ) {
+    const apiClient = await getApiClient();
     const formData = new FormData();
 
     formData.append("Type", payload.type);
     formData.append("ModelVersion", payload.model_version);
     formData.append("File", payload.file);
 
-    const response = await tripoApi.post<string>('Tripo', formData);
+    const response = await apiClient.post<string>('Tripo', formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+       },
+    });
     return response.data;
 }
 
 export async function getModelStatus(
     payload: string
 ) {
-    const response = await tripoApi.get('Tripo/status', { params: { taskid: payload } });
+    const apiClient = await getApiClient();
+    const response = await apiClient.get('Tripo/status', { params: { taskid: payload } });
     return response.data;
 }
 
 export async function saveModel(payload: SaveModelRequest) {
+    const apiClient = await getApiClient();
     const form = new FormData();
 
     form.append('UserID', payload.userId);
@@ -51,7 +59,7 @@ export async function saveModel(payload: SaveModelRequest) {
         form.append('Thumbnail', payload.thumbnail);
     }
 
-    const response = await tripoApi.post('Tripo/save', form, {
+    const response = await apiClient.post('Tripo/save', form, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -63,7 +71,8 @@ export async function saveModel(payload: SaveModelRequest) {
 export async function getListModels(
     userId: string
 ) {
-    const response = await tripoApi.get<{ models: Array<SavedModels> }>(`Tripo/models?UserId=${userId}`);
+    const apiClient = await getApiClient();
+    const response = await apiClient.get<{ models: Array<SavedModels> }>(`Tripo/models?UserId=${userId}`);
     return response.data;
 }
 
@@ -73,19 +82,22 @@ export async function deleteModel(
     const body: DeleteModel = {
         modelId: modelId
     }
-    const response = await tripoApi.delete('Tripo', { data: body });
+    const apiClient = await getApiClient();
+    const response = await apiClient.delete('Tripo', { data: body });
     return response.data;
 }
 
 export async function getPublicModels() {
-    const response = await tripoApi.get<PublicModelRequest>('Tripo/models/public');
+    const apiClient = await getApiClient();
+    const response = await apiClient.get<PublicModelRequest>('Tripo/models/public');
     return response.data;
 }
 
 export async function checkRiggModel(
     task_id: string
 ) {
-   const response = await tripoApi.post<RiggCheckModelResponse>("Tripo/models/checking", {
+const apiClient = await getApiClient();
+   const response = await apiClient.post<RiggCheckModelResponse>("Tripo/models/checking", {
       modelUrl: task_id
    });
    return response.data;
@@ -95,7 +107,8 @@ export async function executeRiggModel(
     task_id: string,
     rig_type: string
 ) {
-    const response = await tripoApi.post<RiggExecutorResponse>("Tripo/models/rig", {
+    const apiClient = await getApiClient();
+    const response = await apiClient.post<RiggExecutorResponse>("Tripo/models/rig", {
         task_id,
         rig_type
     });
@@ -105,7 +118,8 @@ export async function executeRiggModel(
 export async function animateModel(
     task_id: string
 ) {
-    const response = await tripoApi.post<RiggExecutorResponse>("Tripo/models/animation", {
+    const apiClient = await getApiClient();
+    const response = await apiClient.post<RiggExecutorResponse>("Tripo/models/animation", {
         input: task_id
     });;
     return response.data;

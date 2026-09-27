@@ -237,9 +237,7 @@ export default function About() {
         </div>
       </div>
 
-      {/* About Card Modificado */}
       <div className="custom-glass-card flex-1 p-8 relative overflow-hidden flex flex-col justify-center">
-        {/* Imagem de Fundo (Marca d'água / Transparente) */}
         <div 
           className="absolute inset-0 z-0 opacity-15 pointer-events-none"
           style={{
@@ -250,7 +248,6 @@ export default function About() {
           }}
         />
 
-        {/* Conteúdo de Texto */}
         <div className="relative z-10 flex flex-col gap-4 text-zinc-300">
           <h2 className="text-3xl font-extrabold text-white mb-2">Sobre o NeuroMeshStudio</h2>
           <p className="font-medium text-white">
