@@ -179,7 +179,7 @@ export default function Home() {
                            </div>
                            <div className="bg-black/50 fontfamily backdrop-blur-md self-start rounded-full px-3 py-1.5 flex items-center gap-1 border border-white/10 mt-auto">
                               <Flame size={14} className="text-orange-500" />
-                              <span className="text-sm font-medium">9.8k interações</span>
+                              <span className="text-sm font-medium">Disponível Agora!</span>
                            </div>
                         </div>
                      </div>
