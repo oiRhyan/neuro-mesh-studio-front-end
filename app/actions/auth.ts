@@ -48,6 +48,7 @@ export async function loginAction(formData: LoginRequestForm) {
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete('session_token');
+  localStorage.removeItem("@neuro-mesh:last-model-url");
   cookieStore.delete('user');
   redirect('/login');
 }
