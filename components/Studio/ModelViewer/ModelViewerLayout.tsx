@@ -30,7 +30,7 @@ export function ModelViewerLayout({
   step,
   onSelectModel
 }: ModelViewerLayoutProps) {
-  
+
   const [modelId, setModelId] = useState<string>(initialModelId);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function ModelViewerLayout({
   }, [initialModelId]);
 
   const handleGenerate = (image: File) => {
-    setModelId(''); 
+    setModelId('');
     onSelectModel('', '');
     onGenerate(image);
   };
@@ -55,20 +55,26 @@ export function ModelViewerLayout({
       <div className="viewer-container">
         <ViewerCanvas modelUrl={modelUrl} />
         <div className="left-panel">
-          <ModelList 
-            onSelectModel={handleSelectModelFromList} 
+          <ModelList
+            onSelectModel={handleSelectModelFromList}
           />
           <GenerationPanel onGenerate={handleGenerate} loading={loading} />
         </div>
         <LoadingModel progress={progress} loading={loading} step={step} />
         <EnvironmentPanel />
-        <ModelToolbar 
-          modelUrl={modelUrl ?? ""} 
-          modelThumbnail={modelThumbnail ?? ""} 
-          modelId={modelId} 
+        <ModelToolbar
+          modelUrl={modelUrl ?? ""}
+          modelThumbnail={modelThumbnail ?? ""}
+          modelId={modelId}
           onModelSaved={(newId) => {
             setModelId(newId);
-            if (modelUrl) onSelectModel(modelUrl, newId);
+            if (newId === '') {
+              onSelectModel('', '');
+              return;
+            }
+            if (modelUrl) {
+              onSelectModel(modelUrl, newId);
+            }
           }}
         />
       </div>
