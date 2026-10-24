@@ -122,6 +122,7 @@ export default function AutheticatedLayout({
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction className="bg-purple-800 hover:bg-purple-900" onClick={
                                     async () => {
+                                        localStorage.removeItem("@neuro-mesh:last-model-url");
                                         await logoutAction();
                                     }
                                 }>Continuar</AlertDialogAction>
