@@ -138,10 +138,14 @@ export function ModelToolbar({ modelUrl, modelId, onModelSaved }: ModelToolBarPr
     },
     onSuccess: () => {
       setDeleteIsOpen(false);
-      toast.success("Modelo excluído com sucesso!");
+      localStorage.removeItem('@neuro-mesh:last-model-url');
       onModelSaved?.('');
+      toast.success("Modelo excluído com sucesso!");
       queryClient.invalidateQueries({
         queryKey: ['userModels', userObject.id]
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['public-models'],
       });
     },
     onError: () => {
