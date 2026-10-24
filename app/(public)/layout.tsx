@@ -16,6 +16,8 @@ export default function PublicLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
+
   return (
     <main
       lang="pt-br"

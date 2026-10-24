@@ -2,14 +2,14 @@
 import 'server-only';
 import axios from 'axios';
 import { cookies } from 'next/headers';
-import https from 'https'; // <-- Importe do Node
+import https from 'https';
 
 export async function getApiClient() {
     const cookieStore = await cookies();
     const token = cookieStore.get('session_token')?.value;
 
     const api = axios.create({
-        baseURL: 'https://neuromeshstudio-g2gba3chgehkgncv.brazilsouth-01.azurewebsites.net/api',
+        baseURL: 'https://localhost:7103/api',
         timeout: 120000,
         headers: {
             'Content-Type': 'application/json',
@@ -25,6 +25,16 @@ export async function getApiClient() {
         }
         return config;
     });
+
+    api.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            if(error.response?.status == 401) {
+                cookieStore.delete("session_token");
+            }
+            return Promise.reject(error);
+        }
+    );
 
     return api;
 }
