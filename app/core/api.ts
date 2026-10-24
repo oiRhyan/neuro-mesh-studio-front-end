@@ -9,7 +9,7 @@ export async function getApiClient() {
     const token = cookieStore.get('session_token')?.value;
 
     const api = axios.create({
-        baseURL: 'https://localhost:7103/api',
+        baseURL: 'https://neuromeshstudio-g2gba3chgehkgncv.brazilsouth-01.azurewebsites.net/api',
         timeout: 120000,
         headers: {
             'Content-Type': 'application/json',
