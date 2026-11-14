@@ -52,7 +52,7 @@ export default function Login() {
          name: '',
          email: '',
          password: '',
-         imageProfile: null,
+         imageProfile: new File([], ''),
          biography: ''
       }
    })
@@ -160,6 +160,9 @@ export default function Login() {
 
    const onRegisterError = async (formError: typeof registerErrors) => {
       console.log(`[Register Form] Erro ao cadastrar formulário ${formError}`);
+      if(registerErrors.imageProfile) {
+         toast.error(registerErrors.imageProfile.message);
+      }
    }
 
    return (
@@ -334,24 +337,12 @@ export default function Login() {
                         )
                         }
                      </Field>
-                     <FieldGroup className="mx-auto w-115 mt-5 mb-5">
-                        <Field orientation="horizontal">
-                           <Checkbox
-                              id="terms-checkbox-invalid"
-                              name="terms-checkbox-invalid"
-                              className='h-6 w-6'
-                           />
-                           <FieldLabel htmlFor="terms-checkbox-invalid" className='text-1xl'>
-                              Lembre de mim
-                           </FieldLabel>
-                        </Field>
-                     </FieldGroup>
                      <Button
                         variant={"default"}
                         type={'button'}
                         title='Login'
                         disabled={isPending}
-                        className='bg-white text-black w-50 h-15 text-1xl hover:bg-purple-600 hover:text-white mb-4'
+                        className='bg-white text-black w-50 h-15 text-1xl mt-5 hover:bg-purple-600 hover:text-white mb-4'
                         onClick={handleSubmit(onLoginSucess, onLoginError)}
                      >
                         Login
