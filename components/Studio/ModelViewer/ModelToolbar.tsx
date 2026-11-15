@@ -183,27 +183,16 @@ export function ModelToolbar({ modelUrl, modelId, onModelSaved }: ModelToolBarPr
 
     setIsDownloading(true);
 
+    const rawName = modelUrl.split("/").pop()?.split("?")[0] || "modelo-3d";
+    const filename = rawName.toLowerCase().endsWith(".glb")
+      ? rawName
+      : `${rawName}.glb`;
+
     try {
       const response = await fetch(modelUrl);
 
       if (!response.ok) {
-        throw new Error("Modelo não encontrado.");
-      }
-
-      const contentType = response.headers.get("content-type") ?? "";
-
-      if (
-        !contentType.includes("model/gltf-binary") &&
-        !contentType.includes("application/octet-stream")
-      ) {
-        throw new Error("Arquivo inválido.");
-      }
-
-      const filename =
-        modelUrl.split("/").pop()?.split("?")[0] || "modelo-3d.glb";
-
-      if (!filename.toLowerCase().endsWith(".glb")) {
-        throw new Error("Arquivo inválido.");
+        throw new Error(`Erro HTTP: ${response.status}`);
       }
 
       const blob = await response.blob();
@@ -218,13 +207,21 @@ export function ModelToolbar({ modelUrl, modelId, onModelSaved }: ModelToolBarPr
       document.body.removeChild(link);
 
       window.URL.revokeObjectURL(localUrl);
-
       toast.success("Download iniciado!");
     } catch (error) {
-      console.error("Erro ao fazer o download do modelo:", error);
-      toast.error(
-        "Não foi possível baixar o modelo. Salve-o primeiro em sua biblioteca."
-      );
+      console.warn("Fetch direto falhou, tentando download direto via link:", error);
+
+      const link = document.createElement("a");
+      link.href = modelUrl;
+      link.download = filename;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Download iniciado!");
     } finally {
       setIsDownloading(false);
     }
